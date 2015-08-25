@@ -1,0 +1,104 @@
+de.webdataplatform.settings.SystemConfig: Loading system config:
+de.webdataplatform.settings.SystemConfig: SystemConfig.HDFS_USERNAME:hwb
+de.webdataplatform.settings.SystemConfig: SystemConfig.HDFS_PASSWORD:
+de.webdataplatform.settings.SystemConfig: SystemConfig.SSH_USERNAME:hwb
+de.webdataplatform.settings.SystemConfig: SystemConfig.SSH_PASSWORD:123321
+de.webdataplatform.settings.SystemConfig: SystemConfig.SSH_PASSWORDLESSLOGIN:true
+de.webdataplatform.settings.SystemConfig: SystemConfig.SSH_PRIVATEKEY:/home/hwb/.ssh/id_dsa
+de.webdataplatform.settings.SystemConfig: SystemConfig.SSH_KNOWNHOSTS:/home/hwb/.ssh/known_hosts
+de.webdataplatform.settings.SystemConfig: SystemConfig.DIRECTORY_HDFS:/home/hwb/Documents/hadoop-1.2.1/
+de.webdataplatform.settings.SystemConfig: SystemConfig.DIRECTORY_HDFSSTORAGE:/home/hwb/dfsDataDir/
+de.webdataplatform.settings.SystemConfig: SystemConfig.DIRECTORY_HBASE:/home/hwb/Documents/hbase-0.98.12-hadoop1/
+de.webdataplatform.settings.SystemConfig: SystemConfig.DIRECTORY_VMSYSTEM:/home/hwb/Documents/scalablevm/
+de.webdataplatform.settings.SystemConfig: SystemConfig.DIRECTORY_ZOOKEEPERSTORAGE:/home/hwb/Documents/zookeeper/
+de.webdataplatform.settings.SystemConfig: SystemConfig.MASTER_ZOOKEEPERPATH:/hbase/vmaster
+de.webdataplatform.settings.SystemConfig: SystemConfig.MASTER_LOADBALANCINGINTERVAL:
+de.webdataplatform.settings.SystemConfig: SystemConfig.VIEWMANAGER_ZOOKEEPERPATH:/hbase/vm
+de.webdataplatform.settings.SystemConfig: SystemConfig.VIEWMANAGER_HDFSPATH:/viewmanager/
+de.webdataplatform.settings.SystemConfig: SystemConfig.VIEWMANAGER_STATUSINTERVAL:10000
+de.webdataplatform.settings.SystemConfig: SystemConfig.VIEWMANAGER_CALCSTATUSINTERVAL:1000
+de.webdataplatform.settings.SystemConfig: SystemConfig.VIEWMANAGER_DISPLAYINTERVAL:10000
+de.webdataplatform.settings.SystemConfig: SystemConfig.VIEWMANAGER_CRUDOPERATIONSALARMTHRESHOLD:10000
+de.webdataplatform.settings.SystemConfig: SystemConfig.VIEWMANAGER_UPDATEPOLLINGINTERVAL:2
+de.webdataplatform.settings.SystemConfig: SystemConfig.VIEWMANAGER_LOGUPDATES:false
+de.webdataplatform.settings.SystemConfig: SystemConfig.VIEWMANAGER_LOGPERFORMANCE:false
+de.webdataplatform.settings.SystemConfig: SystemConfig.REGIONSERVER_ZOOKEEPERPATH:/hbase/rstest
+de.webdataplatform.settings.SystemConfig: SystemConfig.REGIONSERVER_STATUSINTERVAL:10000
+de.webdataplatform.settings.SystemConfig: SystemConfig.REGIONSERVER_CALCSTATUSINTERVAL:1000
+de.webdataplatform.settings.SystemConfig: SystemConfig.REGIONSERVER_DISPLAYINTERVAL:10000
+de.webdataplatform.settings.SystemConfig: SystemConfig.REGIONSERVER_WALPOLLINGINTERVAL:1000
+de.webdataplatform.settings.SystemConfig: SystemConfig.REGIONSERVER_MAXREPLICASHASHRING:500
+de.webdataplatform.settings.SystemConfig: SystemConfig.REGIONSERVER_LOGWAL:false
+de.webdataplatform.settings.SystemConfig: SystemConfig.CLIENT_LOGINTERVAL:10000
+de.webdataplatform.settings.SystemConfig: SystemConfig.MESSAGES_STARTSEQUENCE:<
+de.webdataplatform.settings.SystemConfig: SystemConfig.MESSAGES_ENDSEQUENCE:>
+de.webdataplatform.settings.SystemConfig: SystemConfig.MESSAGES_SPLITSEQUENCE:;
+de.webdataplatform.settings.SystemConfig: SystemConfig.MESSAGES_SPLITCONTENTSEQUENCE::
+de.webdataplatform.settings.SystemConfig: SystemConfig.MESSAGES_SPLITIDSEQUENCE:,
+de.webdataplatform.settings.SystemConfig: SystemConfig.MESSAGES_MARKERPREFIX:marker:
+de.webdataplatform.settings.SystemConfig: SystemConfig.MESSAGES_POLLINGINTERVAL:100
+de.webdataplatform.settings.SystemConfig: SystemConfig.MESSAGES_LENGTH:250
+de.webdataplatform.settings.SystemConfig: SystemConfig.MESSAGES_RETRYINTERVAL:3000
+de.webdataplatform.settings.SystemConfig: SystemConfig.MESSAGES_NUMOFRETRIES:3
+de.webdataplatform.settings.SystemConfig: SystemConfig.LOGGING_CONSOLE:true
+de.webdataplatform.settings.SystemConfig: SystemConfig.LOGGING_FILE:true
+de.webdataplatform.settings.SystemConfig: SystemConfig.LOGGING_STATISTICS:true
+de.webdataplatform.settings.SystemConfig: SystemConfig.LOGGING_LOGUPDATES:true
+de.webdataplatform.settings.SystemConfig: SystemConfig.FAULTTOLERANCE_SIGNATURES:true
+de.webdataplatform.settings.SystemConfig: SystemConfig.FAULTTOLERANCE_COMMITLOG:false
+de.webdataplatform.settings.SystemConfig: SystemConfig.FAULTTOLERANCE_TESTANDSET:true
+de.webdataplatform.settings.SystemConfig: --------------------------------------------------------------
+de.webdataplatform.settings.NetworkConfig: Loading network config:
+de.webdataplatform.settings.NetworkConfig: NetworkConfig.ZOOKEEPER_QUORUM:master
+de.webdataplatform.settings.NetworkConfig: NetworkConfig.ZOOKEEPER_CLIENTPORT:0
+de.webdataplatform.settings.NetworkConfig: NetworkConfig.HBASE_MASTER:Node [ipAddress=master, messagePort=0, updatePort=0, sshConnection=SSHConnection [address=master, port=22, user=hwb, password=123321]]
+de.webdataplatform.settings.NetworkConfig: NetworkConfig.VM_MASTER:Node [ipAddress=master, messagePort=4004, updatePort=0, sshConnection=SSHConnection [address=master, port=22, user=hwb, password=123321]]
+de.webdataplatform.settings.NetworkConfig: NetworkConfig.CLIENTS:[Node [ipAddress=master, messagePort=0, updatePort=0, sshConnection=SSHConnection [address=master, port=22, user=hwb, password=123321]], Node [ipAddress=rs1, messagePort=0, updatePort=0, sshConnection=SSHConnection [address=rs1, port=22, user=hwb, password=123321]]]
+de.webdataplatform.settings.NetworkConfig: NetworkConfig.REGIONSERVERS:[Node [ipAddress=master, messagePort=4133, updatePort=0, sshConnection=SSHConnection [address=master, port=22, user=hwb, password=123321]], Node [ipAddress=rs1, messagePort=4133, updatePort=0, sshConnection=SSHConnection [address=rs1, port=22, user=hwb, password=123321]]]
+de.webdataplatform.settings.NetworkConfig: NetworkConfig.VIEWMANAGERS:[Node [ipAddress=master, messagePort=4130, updatePort=4230, sshConnection=SSHConnection [address=master, port=22, user=hwb, password=123321]], Node [ipAddress=rs1, messagePort=4130, updatePort=4230, sshConnection=SSHConnection [address=rs1, port=22, user=hwb, password=123321]]]
+de.webdataplatform.settings.NetworkConfig: NetworkConfig.HDFS:hdfs://master:9000/hbase
+de.webdataplatform.settings.NetworkConfig: --------------------------------------------------------------
+de.webdataplatform.settings.DatabaseConfig: Loading database config:
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=bt1, primaryKey=KeyDefinition [prefix=k, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggKey, family=colfam1, prefix=x, startRange=1, endRange=1001], ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=101]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=bt2, primaryKey=KeyDefinition [prefix=f, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggKey, family=colfam1, prefix=x, startRange=1, endRange=1001], ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=101]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=bt3, primaryKey=KeyDefinition [prefix=g, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggKey, family=colfam1, prefix=x, startRange=1, endRange=1001], ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=101]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=delta1, primaryKey=KeyDefinition [prefix=k, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=delta2, primaryKey=KeyDefinition [prefix=f, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=delta3, primaryKey=KeyDefinition [prefix=g, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=count1, primaryKey=KeyDefinition [prefix=x, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=selection1, primaryKey=KeyDefinition [prefix=k, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=sum1, primaryKey=KeyDefinition [prefix=x, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=index1, primaryKey=KeyDefinition [prefix=x, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=min1, primaryKey=KeyDefinition [prefix=x, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=max1, primaryKey=KeyDefinition [prefix=x, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=joinpair1, primaryKey=KeyDefinition [prefix=x, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal1, family=delta1fam1, prefix=, startRange=1, endRange=100], ColumnDefinition [name=colAggVal2, family=delta2fam1, prefix=, startRange=1, endRange=100], ColumnDefinition [name=colAggVal3, family=delta3fam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: TableDefinition [name=join1, primaryKey=KeyDefinition [prefix=k, startRange=1, endRange=1001], columns=[ColumnDefinition [name=colAggVal, family=colfam1, prefix=, startRange=1, endRange=100]]]
+de.webdataplatform.settings.DatabaseConfig: --------------------------------------------------------------
+de.webdataplatform.settings.EvaluationConfig: Loading evaluation config:
+de.webdataplatform.settings.SystemConfig: EvaluationConfig.UPDATEPROCESSTIMEOUT:1800000
+de.webdataplatform.settings.SystemConfig: EvaluationConfig.REGIONSERVER_UPDATESTIMEOUT:2000
+de.webdataplatform.settings.SystemConfig: EvaluationConfig.REGIONSERVER_OVERALLTIMEOUT:300000
+de.webdataplatform.settings.SystemConfig: EvaluationConfig.REGIONSERVER_READWALDELAY:10000
+de.webdataplatform.settings.SystemConfig: EvaluationConfig.CLIENT_FILLTABLESTIMEOUT:1800000
+de.webdataplatform.settings.SystemConfig: EvaluationConfig.CLIENT_CREATECONTROLTABLES:true
+de.webdataplatform.settings.SystemConfig: EvaluationConfig.CLIENT_RECREATETABLES:true
+de.webdataplatform.settings.SystemConfig: EvaluationConfig.VIEWMANAGER_KILLDELAY:30000
+de.webdataplatform.settings.EvaluationConfig: 3 basetables found
+de.webdataplatform.settings.EvaluationConfig: 3 delta views found
+de.webdataplatform.settings.EvaluationConfig: 1 aggregation views found
+de.webdataplatform.settings.EvaluationConfig: 0 selection views found
+de.webdataplatform.settings.EvaluationConfig: 0 index views found
+de.webdataplatform.settings.EvaluationConfig: 1 reverse join views found
+de.webdataplatform.settings.EvaluationConfig: 1 join views found
+de.webdataplatform.settings.EvaluationConfig: CreateBaseTable [name=bt1, distribution=uniform, numOfOperations=101, numOfRegions=5, useUpdates=false, useDeletes=false]
+de.webdataplatform.settings.EvaluationConfig: CreateBaseTable [name=bt2, distribution=uniform, numOfOperations=101, numOfRegions=5, useUpdates=false, useDeletes=false]
+de.webdataplatform.settings.EvaluationConfig: CreateBaseTable [name=bt3, distribution=uniform, numOfOperations=101, numOfRegions=5, useUpdates=false, useDeletes=false]
+de.webdataplatform.settings.EvaluationConfig: CreateDeltaView [name=delta1, type=delta, basetable=bt1, columns=[colAggKey, colAggVal], numOfRegions=2, controlTable=null]
+de.webdataplatform.settings.EvaluationConfig: CreateDeltaView [name=delta2, type=delta, basetable=bt2, columns=[colAggKey, colAggVal], numOfRegions=2, controlTable=null]
+de.webdataplatform.settings.EvaluationConfig: CreateDeltaView [name=delta3, type=delta, basetable=bt3, columns=[colAggKey, colAggVal], numOfRegions=2, controlTable=null]
+de.webdataplatform.settings.EvaluationConfig: CreateAggregationView [name=count1, type=count, basetable=delta1, aggregationKey=colAggKey, aggregationValue=colAggVal, numOfRegions=2, controlTable=bt1]
+de.webdataplatform.settings.EvaluationConfig: CreateReverseJoinView [name=joinpair1, joinTables=[JoinTable [tableName=delta1, joinKey=colAggKey], JoinTable [tableName=delta2, joinKey=colAggKey], JoinTable [tableName=delta3, joinKey=colAggKey]], numOfRegions=2, controlTable=null, useIndex=]
+de.webdataplatform.settings.EvaluationConfig: CreateJoinView [name=join1, joinPairView=joinpair1, compositeKey=[delta1fam1, delta2fam1, delta3fam1], numOfRegions=2, controlTable=bt1]
+de.webdataplatform.settings.EvaluationConfig: EvaluationSet [evaluationParams=EvaluationParams [iterations=1, variableParams=[]], experiment=Experiment [numOfRegionServers=2, numOfViewManagers=2, numOfKilledViewManagers=0, createdTables=[CreateBaseTable [name=bt1, distribution=uniform, numOfOperations=101, numOfRegions=5, useUpdates=false, useDeletes=false], CreateBaseTable [name=bt2, distribution=uniform, numOfOperations=101, numOfRegions=5, useUpdates=false, useDeletes=false], CreateBaseTable [name=bt3, distribution=uniform, numOfOperations=101, numOfRegions=5, useUpdates=false, useDeletes=false], CreateDeltaView [name=delta1, type=delta, basetable=bt1, columns=[colAggKey, colAggVal], numOfRegions=2, controlTable=null], CreateDeltaView [name=delta2, type=delta, basetable=bt2, columns=[colAggKey, colAggVal], numOfRegions=2, controlTable=null], CreateDeltaView [name=delta3, type=delta, basetable=bt3, columns=[colAggKey, colAggVal], numOfRegions=2, controlTable=null], CreateAggregationView [name=count1, type=count, basetable=delta1, aggregationKey=colAggKey, aggregationValue=colAggVal, numOfRegions=2, controlTable=bt1], CreateReverseJoinView [name=joinpair1, joinTables=[JoinTable [tableName=delta1, joinKey=colAggKey], JoinTable [tableName=delta2, joinKey=colAggKey], JoinTable [tableName=delta3, joinKey=colAggKey]], numOfRegions=2, controlTable=null, useIndex=], CreateJoinView [name=join1, joinPairView=joinpair1, compositeKey=[delta1fam1, delta2fam1, delta3fam1], numOfRegions=2, controlTable=bt1]]]]
+de.webdataplatform.settings.EvaluationConfig: 1 experiments found
+de.webdataplatform.settings.EvaluationConfig: --------------------------------------------------------------

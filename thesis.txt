@@ -1,0 +1,42 @@
+1. sql execution order: where from group (having) select (order). —> our pattern
+
+2. delta view only once, delta information will be preserved in the stream.
+
+3. set up jan’s implementation
+
+4. try view manager (Monday morning)
+
+5. more generic stream
+
+5. aggregation key based view, put pre-aggregated view and aggregation view into a table.
+
+6. join view can also be put into the table above, if the aggregation key = join key.
+
+7. logic should be clear, more important than implementation.
+
+8. each pattern step: on or off.
+
+9. materialize all intermediate results.
+
+10. gnuplots
+
+
+Setup the process
+
+Client
+WALReader
+ViewTester (check)
+RegionServer
+TestSetup
+SVMSystem(completeTestRun)
+SVMHBase
+TestSSH
+SSHService
+VMEvaluationConfig.xml(numOfOperations, 100000)
+VMDatabaseConfig.xml
+VMSystemConfig.xml(to be adapated)
+VMNetworkConfig.xml(to be adapted)
+startvm.sh
+evaluation.log(may contain 100 experiments)
+experiment.log
+
