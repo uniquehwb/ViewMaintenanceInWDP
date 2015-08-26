@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos.TableName;
+
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
@@ -81,6 +83,21 @@ public class JSqlParser {
 				}
 				tableList.add(reverseJoinView);
 			}
+			List<String> tablesNamesList = tablesNamesFinder.getTableList((Select) statement);
+			if (tablesNamesList != null) {
+				for (int m = 0; m < tablesNamesList.size(); m++) {
+					String name = tablesNamesList.get(m);
+					List<Table> list;
+					list = new ArrayList<Table>();
+					// Add base table
+					Table basetable = new BaseTable(name);
+					list.add(basetable);
+					// Add delta view preparing for the join
+					list.add(new DeltaView("delta" + viewCount));
+					viewCount++;
+					tableListMap.put(name, list);
+				}
+			}
 			containJoin = true;
 		} else {
 			System.out.println("no joins \n");
@@ -106,6 +123,17 @@ public class JSqlParser {
 					Expression rightExpression = andExpression.getRightExpression();
 					String expression = rightExpression.toString();
 					selectionView.setExpression(expression);
+					if (expression.contains(">")) {
+						selectionView.setFirstAttr(">");
+					    selectionView.setSecondAttr(expression.split(">")[1].trim());
+				    } else if (expression.contains("=")) {
+				    	selectionView.setFirstAttr("=");
+					    selectionView.setSecondAttr(expression.split("=")[1].trim());
+				    } else {
+				    	selectionView.setFirstAttr("<");
+					    selectionView.setSecondAttr(expression.split("<")[1].trim());
+				    }
+					
 					if (containJoin) {
 						// If there are joins, put selections to corresponding base table.
 						if (rightExpression instanceof BinaryExpression) {
@@ -114,17 +142,7 @@ public class JSqlParser {
 								Column column = (Column) binaryExpression.getLeftExpression();
 								String baseTable = column.getTable().toString();
 								List<Table> list;
-								if (tableListMap.containsKey(baseTable)) {
-									list = tableListMap.get(baseTable);
-								} else {
-									list = new ArrayList<Table>();
-									// Add base table
-									Table basetable = new BaseTable(baseTable);
-									list.add(basetable);
-									// Add delta view preparing for the join
-									list.add(new DeltaView("delta" + viewCount));
-									viewCount++;
-								}
+								list = tableListMap.get(baseTable);
 								list.add(selectionView);
 								tableListMap.put(baseTable, list);
 							}
@@ -139,7 +157,18 @@ public class JSqlParser {
 				// Last selection without "and"
 				Table selectionView = new SelectionView("selection" + viewCount);
 				viewCount++;
-				selectionView.setExpression(e.toString());
+				String expression = e.toString();
+				selectionView.setExpression(expression);
+				if (expression.contains(">")) {
+					selectionView.setFirstAttr(">");
+				    selectionView.setSecondAttr(expression.split(">")[1].trim());
+			    } else if (expression.contains("=")) {
+			    	selectionView.setFirstAttr("=");
+				    selectionView.setSecondAttr(expression.split("=")[1].trim());
+			    } else {
+			    	selectionView.setFirstAttr("<");
+				    selectionView.setSecondAttr(expression.split("<")[1].trim());
+			    }
 				if (containJoin) {
 					if (e instanceof BinaryExpression) {
 						BinaryExpression binaryExpression = (BinaryExpression) e;
@@ -147,17 +176,7 @@ public class JSqlParser {
 							Column column = (Column) binaryExpression.getLeftExpression();
 							String baseTable = column.getTable().toString();
 							List<Table> list;
-							if (tableListMap.containsKey(baseTable)) {
-								list = tableListMap.get(baseTable);
-							} else {
-								list = new ArrayList<Table>();
-								// Add base table
-								Table basetable = new BaseTable(baseTable);
-								list.add(basetable);
-								// Add delta view preparing for the join
-								list.add(new DeltaView("delta" + viewCount));
-								viewCount++;
-							}
+							list = tableListMap.get(baseTable);
 							list.add(selectionView);
 							tableListMap.put(baseTable, list);
 							
@@ -178,10 +197,17 @@ public class JSqlParser {
 				Table aggregationView = new AggregationView(aggregationType + viewCount);
 				aggregationView.setType(aggregationType);
 				viewCount++;
-				aggregationView.setExpression(aggregationsFinder.getAggregationList(pselect).toString());
-				// Aggregation key
-//				operation.setKeyWords(pselect.getGroupByColumnReferences().toString());
+				aggregationView.setExpression(fun.toString());
+				// group by key
+				String groupByKey = pselect.getGroupByColumnReferences().get(0).toString();
+				// remove bracket
+				groupByKey = groupByKey.substring(1, groupByKey.length()-1);
+				aggregationView.setFirstAttr(groupByKey);
+				// aggregation key
+				String aggKey = fun.getParameters().getExpressions().get(0).toString();
+				aggregationView.setSecondAttr(aggKey);
 				tableList.add(aggregationView);
+//				System.out.println(aggregationView.getFirstAttr() + " " + aggregationView.getSecondAttr());
 			}
 		}
 				

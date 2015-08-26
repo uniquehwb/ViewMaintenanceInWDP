@@ -4,9 +4,14 @@ import java.util.List;
 
 public class SelectionView implements Table {
 	private List<Table> baseTables;
+	private Table controlTable;
 	private String name;
 	private String type = "selection";
 	private String expression;
+	// operator in selection
+	private String firstAttr;
+	// value to compare in selection
+	private String secondAttr;
 	
 	public SelectionView(String name) {
 		this.name = name;
@@ -42,5 +47,29 @@ public class SelectionView implements Table {
 
 	public void setExpression(String expression) {
 		this.expression = expression;
+	}
+	
+	public Table getControlTable() {
+		return controlTable;
+	}
+
+	public void setControlTable(Table controlTable) {
+		this.controlTable = controlTable;
+	}
+	
+	public String getFirstAttr() {
+		return firstAttr;
+	}
+
+	public void setFirstAttr(String firstAttr) {
+		this.firstAttr = firstAttr;
+	}
+
+	public String getSecondAttr() {
+		return secondAttr;
+	}
+
+	public void setSecondAttr(String secondAttr) {
+		this.secondAttr = secondAttr;
 	}
 }

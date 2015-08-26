@@ -69,7 +69,7 @@ public class DatabaseXMLGenerator {
 				endRange.appendChild(doc.createTextNode("1001"));
 				primaryKey.appendChild(endRange);
 				
-				if (tables.get(i).getType() == "basetable") {
+				if ("basetable".equals(tables.get(i).getType())) {
 					Element column1 = doc.createElement("column");
 					tableDefinition.appendChild(column1);
 					
@@ -97,7 +97,7 @@ public class DatabaseXMLGenerator {
 					tableDefinition.appendChild(column2);
 					
 					Element columnName2 = doc.createElement("name");
-					columnName2.appendChild(doc.createTextNode("colAggVal1"));
+					columnName2.appendChild(doc.createTextNode("colAggVal"));
 					column2.appendChild(columnName2);
 					
 					Element columnFamily2 = doc.createElement("family");

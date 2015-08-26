@@ -2,12 +2,6 @@ package de.webdataplatform.test;
 
 import java.lang.reflect.Field;
 
-import javax.xml.transform.TransformerException;
-
-import net.sf.jsqlparser.JSQLParserException;
-
-import org.apache.commons.configuration.DatabaseConfiguration;
-
 import de.webdataplatform.log.Log;
 import de.webdataplatform.log.StatisticLog;
 import de.webdataplatform.settings.DatabaseConfig;
@@ -17,7 +11,6 @@ import de.webdataplatform.settings.Experiment;
 import de.webdataplatform.settings.NetworkConfig;
 import de.webdataplatform.settings.SystemConfig;
 import de.webdataplatform.settings.VariableParam;
-import de.webdataplatform.sql.SqlClient;
 
 public class TestSetup {
 
@@ -33,10 +26,10 @@ public class TestSetup {
 	private static Log log;
 	
 	
-	public static void main(String[] args) throws JSQLParserException, TransformerException {
+	public static void main(String[] args){
 
 //		retrieveIpAddresses();
-
+		
 //		
 		StatisticLog.name = "result";
 		log = new Log("evaluation.log");

@@ -184,6 +184,8 @@ public class RegionServer implements Runnable{
 							updatesAssinged.incrementAndGet();
 
 							try {
+								// Queue belongs to RS extension, only VM is a separate component and
+								// uses socket to communicate with RS extension.
 								updateDistributor.queueUpdate(viewManager, btupdate.convertToString());
 								
 							} catch (NoQueueForViewManagerException e) {

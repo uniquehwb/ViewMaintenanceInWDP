@@ -45,6 +45,7 @@ public class LogicPlan {
 			List<Table> basetables = new ArrayList<Table>();
 			basetables.add(list.get(i-1));
 			list.get(i).setBaseTables(basetables);
+			list.get(i).setControlTable(list.get(0));
 		}
 		return list;
 	}

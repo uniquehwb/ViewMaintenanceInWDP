@@ -3,11 +3,13 @@ package de.webdataplatform.sql;
 import java.util.List;
 
 public class ReverseJoinView implements Table{
-	
 	private List<Table> baseTables;
+	private Table controlTable;
 	private String name;
 	private String type = "reversejoin";
 	private String expression;
+	private String firstAttr;
+	private String secondAttr;
 	
 	public ReverseJoinView(String name) {
 		this.name = name;
@@ -43,6 +45,30 @@ public class ReverseJoinView implements Table{
 
 	public void setExpression(String expression) {
 		this.expression = expression;
+	}
+	
+	public Table getControlTable() {
+		return controlTable;
+	}
+
+	public void setControlTable(Table controlTable) {
+		this.controlTable = controlTable;
+	}
+	
+	public String getFirstAttr() {
+		return firstAttr;
+	}
+
+	public void setFirstAttr(String firstAttr) {
+		this.firstAttr = firstAttr;
+	}
+
+	public String getSecondAttr() {
+		return secondAttr;
+	}
+
+	public void setSecondAttr(String secondAttr) {
+		this.secondAttr = secondAttr;
 	}
 
 }
