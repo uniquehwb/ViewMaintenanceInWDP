@@ -33,10 +33,18 @@ public class JSqlParser {
 	
 	private boolean containJoin = false;
 	// count the number of view to avoid duplicated name
-	private int viewCount = 0;
+	private int basetableCount = 1;
+	private int selectionViewCount = 1;
+	private int projectionViewCount = 1;
+	private int deltaViewCount = 1;
+	private int aggregationViewCount = 1;
+	private int joinViewCount = 1;
 	
 	private AggregationsFinder aggregationsFinder;
 	private TablesNamesFinder tablesNamesFinder;
+	
+	private char startRowKeyPrefix = 'j';
+	private char startAggKeyPrefix = 'x';
 	
 	
 	public JSqlParser(String sqlString) {
@@ -68,21 +76,23 @@ public class JSqlParser {
 	public void getAllKindsOfTables(PlainSelect pselect) {
 		// Get join
 		if (pselect.getJoins() != null) {
-			for (int i = 0; i < pselect.getJoins().size(); i++){
-				Join join = (Join) pselect.getJoins().get(i);
-				Table reverseJoinView = new ReverseJoinView("join" + viewCount);
-				viewCount++;
-				reverseJoinView.setExpression(join.toString());
-				if (join.getOnExpression() instanceof BinaryExpression) {
-					BinaryExpression binaryExpression = (BinaryExpression) join.getOnExpression();
-					if (binaryExpression.getLeftExpression() instanceof Column) {
-						Column column = (Column) binaryExpression.getLeftExpression();
-						String aggregationKey = column.getColumnName();
+			// In use case, there is at most one join.
+			Join join = (Join) pselect.getJoins().get(0);
+			Table reverseJoinView = new ReverseJoinView("join" + joinViewCount);
+			String prefix = String.valueOf((char) (startAggKeyPrefix));
+			reverseJoinView.setPKPrefix(prefix);
+			joinViewCount++;
+			reverseJoinView.setExpression(join.toString());
+			if (join.getOnExpression() instanceof BinaryExpression) {
+				BinaryExpression binaryExpression = (BinaryExpression) join.getOnExpression();
+				if (binaryExpression.getLeftExpression() instanceof Column) {
+					Column column = (Column) binaryExpression.getLeftExpression();
+					String aggregationKey = column.getColumnName();
 //						keyWords = keyWords + aggregationKey;
-					}
 				}
-				tableList.add(reverseJoinView);
 			}
+			tableList.add(reverseJoinView);
+			
 			List<String> tablesNamesList = tablesNamesFinder.getTableList((Select) statement);
 			if (tablesNamesList != null) {
 				for (int m = 0; m < tablesNamesList.size(); m++) {
@@ -91,10 +101,16 @@ public class JSqlParser {
 					list = new ArrayList<Table>();
 					// Add base table
 					Table basetable = new BaseTable(name);
+					String btPrefix = String.valueOf((char) (startRowKeyPrefix + basetableCount));
+					basetable.setPKPrefix(btPrefix);
 					list.add(basetable);
+					basetableCount++;
 					// Add delta view preparing for the join
-					list.add(new DeltaView("delta" + viewCount));
-					viewCount++;
+					Table deltaView = new DeltaView("delta" + deltaViewCount);
+					String deltaPrefix = String.valueOf((char) (startRowKeyPrefix + deltaViewCount));
+					deltaView.setPKPrefix(deltaPrefix);
+					list.add(deltaView);
+					deltaViewCount++;
 					tableListMap.put(name, list);
 				}
 			}
@@ -105,8 +121,15 @@ public class JSqlParser {
 			if (tablesNamesList != null) {
 				// There should be only one base table without join.
 				Table basetable = new BaseTable(tablesNamesList.get(0));
+				String btPrefix = String.valueOf((char) (startRowKeyPrefix + basetableCount));
+				basetable.setPKPrefix(btPrefix);
 				tableList.add(basetable);
-				tableList.add(new DeltaView("delta1"));
+				basetableCount++;
+				Table deltaView = new DeltaView("delta" + deltaViewCount);
+				String deltaPrefix = String.valueOf((char) (startRowKeyPrefix + deltaViewCount));
+				deltaView.setPKPrefix(deltaPrefix);
+				tableList.add(deltaView);
+				deltaViewCount++;
 			}
 			containJoin = false;
 		}
@@ -118,8 +141,8 @@ public class JSqlParser {
 			try {
 				while (e instanceof AndExpression) {
 					AndExpression andExpression = (AndExpression) e;
-					Table selectionView = new SelectionView("selection" + viewCount);
-					viewCount++;
+					Table selectionView = new SelectionView("selection" + selectionViewCount);
+					selectionViewCount++;
 					Expression rightExpression = andExpression.getRightExpression();
 					String expression = rightExpression.toString();
 					selectionView.setExpression(expression);
@@ -143,11 +166,14 @@ public class JSqlParser {
 								String baseTable = column.getTable().toString();
 								List<Table> list;
 								list = tableListMap.get(baseTable);
+								// In each chain, prefix of primary key should be same as base table
+								selectionView.setPKPrefix(list.get(0).getPKPrefix());
 								list.add(selectionView);
 								tableListMap.put(baseTable, list);
 							}
 						}
 					} else {
+						selectionView.setPKPrefix(tableList.get(0).getPKPrefix());
 						tableList.add(selectionView);
 					}
 					// Iterator
@@ -155,8 +181,8 @@ public class JSqlParser {
 				}
 			} finally {
 				// Last selection without "and"
-				Table selectionView = new SelectionView("selection" + viewCount);
-				viewCount++;
+				Table selectionView = new SelectionView("selection" + selectionViewCount);
+				selectionViewCount++;
 				String expression = e.toString();
 				selectionView.setExpression(expression);
 				if (expression.contains(">")) {
@@ -177,12 +203,15 @@ public class JSqlParser {
 							String baseTable = column.getTable().toString();
 							List<Table> list;
 							list = tableListMap.get(baseTable);
+							// In each chain, prefix of primary key should be same as base table
+							selectionView.setPKPrefix(list.get(0).getPKPrefix());
 							list.add(selectionView);
 							tableListMap.put(baseTable, list);
 							
 						}
 					}
 				} else {
+					selectionView.setPKPrefix(tableList.get(0).getPKPrefix());
 					tableList.add(selectionView);
 				}
 			}
@@ -194,14 +223,14 @@ public class JSqlParser {
 		if (aggregationsFinder.getAggregationList(pselect) != null) {
 			for (Function fun: aggregationsFinder.getAggregationList(pselect)) {
 				String aggregationType = fun.getName().toLowerCase();
-				Table aggregationView = new AggregationView(aggregationType + viewCount);
+				Table aggregationView = new AggregationView(aggregationType + aggregationViewCount);
 				aggregationView.setType(aggregationType);
-				viewCount++;
+				String aggregationPrefix = String.valueOf((char) (startAggKeyPrefix));
+				aggregationView.setPKPrefix(aggregationPrefix);
+				aggregationViewCount++;
 				aggregationView.setExpression(fun.toString());
 				// group by key
 				String groupByKey = pselect.getGroupByColumnReferences().get(0).toString();
-				// remove bracket
-				groupByKey = groupByKey.substring(1, groupByKey.length()-1);
 				aggregationView.setFirstAttr(groupByKey);
 				// aggregation key
 				String aggKey = fun.getParameters().getExpressions().get(0).toString();

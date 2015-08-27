@@ -55,6 +55,8 @@ public class LogicPlan {
 		for (Table table: tables) {
 			plainString += "Table name: " + table.getName();
 			plainString += "\n";
+			plainString += "Table PK prefix: " + table.getPKPrefix();
+			plainString += "\n";
 			plainString += "Table type: " + table.getType();
 			if (table.getBaseTables() != null) {
 				plainString += "\n";

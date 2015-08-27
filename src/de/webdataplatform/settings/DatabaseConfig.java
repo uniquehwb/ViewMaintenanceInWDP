@@ -40,7 +40,7 @@ public class DatabaseConfig {
 		
 	    	Table table = tables.get(i);
 		    
-		    String keyPrefix = "k";
+		    String keyPrefix = table.getPKPrefix();
 		    String keyStartRange = "1";
 		    String keyEndRange = "1001";
 		    
@@ -82,6 +82,15 @@ public class DatabaseConfig {
 					    ColumnDefinition colDef = new ColumnDefinition(colName, colFamily, colPrefix, Long.parseLong(colStartRange), Long.parseLong(colEndRange));
 					    colDefs.add(colDef);
 					}
+					// Add colfam1 to reversejoin view for recording zfinish_marker
+					String colName = "zfinish_marker";
+				    String colFamily = "colfam1";
+				    String colPrefix = "";
+				    String colStartRange = "1";
+				    String colEndRange = "101";
+				    
+				    ColumnDefinition colDef = new ColumnDefinition(colName, colFamily, colPrefix, Long.parseLong(colStartRange), Long.parseLong(colEndRange));
+				    colDefs.add(colDef);
 		    	} else {
 		    		String colName = "colAggVal";
 				    String colFamily = "colfam1";

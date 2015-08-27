@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -481,6 +482,21 @@ public class Processing implements Runnable{
 			key = columns.get(cAV.getAggregationKey());
 			
 //			getList.add(Bytes.toBytes(cAV.getAggregationValue()));
+			if (columns.get(cAV.getAggregationKey()) != null) {
+				key=columns.get(cAV.getAggregationValue());
+			} else {
+				Iterator it = columns.entrySet().iterator();
+			    while (it.hasNext()) {
+			        Map.Entry pair = (Map.Entry)it.next();
+			        String rowKey = (String) pair.getKey();
+			        // To be changed according to aggregation key
+			        if (rowKey.contains("k")) {
+						key = columns.get(rowKey).split("\\|")[1];
+						break;
+					}
+			        it.remove(); // avoids a ConcurrentModificationException
+			    }
+			}
 			
 		}
 		if(viewMode.equals(ViewMode.SELECTION)){
@@ -568,7 +584,7 @@ public class Processing implements Runnable{
 
 	
 	private Boolean updateView(BaseTableUpdate btu, OperationMode propagationMode, String viewRecordKey, List<String> colFams, Result oldVM, String signature){
-		
+		log.updates(this.getClass(), "viewRecordKey: "+viewRecordKey);
 		ViewMode viewMode = btu.getViewMode();
 		String viewTableName = btu.getViewTable();
 		Boolean succeed=false;
@@ -583,7 +599,6 @@ public class Processing implements Runnable{
 //		if(propagationMode.equals(PropagationMode.DELETE))columns = btu.getOldColumns(); 
 		
 //		log.info(this.getClass(), "columns: "+columns);
-		
 		
 		if(viewMode.equals(ViewMode.AGGREGATION_SUM) || viewMode.equals(ViewMode.AGGREGATION_COUNT) || viewMode.equals(ViewMode.AGGREGATION_MIN) || viewMode.equals(ViewMode.AGGREGATION_MAX)){
 			
@@ -606,9 +621,24 @@ public class Processing implements Runnable{
 			}else{
 				oldValue = 0l;
 			}
-			Long deltaValue=null;
-			if(propagationMode.equals(OperationMode.INSERT))deltaValue=Long.parseLong(columns.get(cAV.getAggregationValue()));
-			if(propagationMode.equals(OperationMode.DELETE))deltaValue=Long.parseLong(btu.getOldColumns().get(cAV.getAggregationValue()));
+			Long deltaValue=0l;
+			if(propagationMode.equals(OperationMode.INSERT))
+				if (columns.get(cAV.getAggregationValue()) != null) {
+					deltaValue=Long.parseLong(columns.get(cAV.getAggregationValue()));
+				} else {
+					Iterator it = columns.entrySet().iterator();
+				    while (it.hasNext()) {
+				        Map.Entry pair = (Map.Entry)it.next();
+				        String key = (String) pair.getKey();
+				        // To be changed according to aggregation key
+				        if (key.contains("k")) {
+							deltaValue += Long.parseLong(columns.get(key).split("\\|")[3]);
+						}
+				        it.remove(); // avoids a ConcurrentModificationException
+				    }
+				}
+			if(propagationMode.equals(OperationMode.DELETE))
+				deltaValue=Long.parseLong(btu.getOldColumns().get(cAV.getAggregationValue()));
 			
 			Long result = null;
 			
@@ -743,6 +773,13 @@ public class Processing implements Runnable{
 			if(result != 0){
 				
 				newViewRecord.put(Bytes.toBytes(valueName), Bytes.toBytes(String.valueOf(result)));
+				log.updates(this.getClass(), viewTableName);
+				log.updates(this.getClass(), viewRecordKey);
+				log.updates(this.getClass(), colFams.get(0));
+				log.updates(this.getClass(), checkQualifier);
+				log.updates(this.getClass(), checkValue);
+				log.updates(this.getClass(), newViewRecord.toString());
+				log.updates(this.getClass(), signature);
 				succeed = insertToViewTable(viewTableName, viewRecordKey, colFams.get(0), checkQualifier, checkValue, newViewRecord, signature);
 			}else{
 				

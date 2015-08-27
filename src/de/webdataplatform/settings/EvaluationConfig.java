@@ -209,14 +209,14 @@ public class EvaluationConfig {
 						    CreateSelectionView createSelectionView = new CreateSelectionView(name, basetable, selectionKey, selectionOperation, selectionValue, Integer.parseInt(numOfRegions), controlTable);
 						    
 						    createTables.add(createSelectionView);
-			    		} else if ("sum".equals(table.getType())) {
+			    		} else if ("sum".equals(table.getType()) || "count".equals(table.getType())) {
 			    			String name = table.getName();
 						    String type = table.getType();
 						    String basetable = table.getBaseTables().get(0).getName();
 						    String aggregationKey = table.getFirstAttr();
 						    String aggregationValue = table.getSecondAttr();
 						    String numOfRegions = "2";
-						    String controlTable = table.getBaseTables().get(0).getName();
+						    String controlTable = null;
 						    
 						    CreateAggregationView createAggregationView = new CreateAggregationView(name, type, basetable, aggregationKey, aggregationValue, Integer.parseInt(numOfRegions), controlTable);
 						    

@@ -12,6 +12,8 @@ public class AggregationView implements Table {
 	private String firstAttr;
 	// aggregation key
 	private String secondAttr;
+	// prefix of the primary key
+	private String pkPrefix;
 	
 	public AggregationView(String name) {
 		this.name = name;
@@ -71,5 +73,13 @@ public class AggregationView implements Table {
 
 	public void setSecondAttr(String secondAttr) {
 		this.secondAttr = secondAttr;
+	}
+
+	public String getPKPrefix() {
+		return pkPrefix;
+	}
+
+	public void setPKPrefix(String pkPrefix) {
+		this.pkPrefix = pkPrefix;
 	}
 }

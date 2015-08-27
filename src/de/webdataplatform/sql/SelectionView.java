@@ -12,6 +12,8 @@ public class SelectionView implements Table {
 	private String firstAttr;
 	// value to compare in selection
 	private String secondAttr;
+	// prefix of the primary key
+	private String pkPrefix;
 	
 	public SelectionView(String name) {
 		this.name = name;
@@ -71,5 +73,13 @@ public class SelectionView implements Table {
 
 	public void setSecondAttr(String secondAttr) {
 		this.secondAttr = secondAttr;
+	}
+	
+	public String getPKPrefix() {
+		return pkPrefix;
+	}
+
+	public void setPKPrefix(String pkPrefix) {
+		this.pkPrefix = pkPrefix;
 	}
 }

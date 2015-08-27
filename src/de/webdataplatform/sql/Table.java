@@ -24,4 +24,7 @@ public interface Table {
 	
 	public String getSecondAttr();
 	public void setSecondAttr(String secondAttr);
+	
+	public String getPKPrefix();
+	public void setPKPrefix(String pkPrefix);
 }

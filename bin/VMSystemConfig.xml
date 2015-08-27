@@ -39,7 +39,7 @@
 			<displayInterval>10000</displayInterval>
 			<crudOperationsAlarmThreshold>10000</crudOperationsAlarmThreshold>
 			<updatePollingInterval>2</updatePollingInterval>
-			<logUpdates>false</logUpdates>
+			<logUpdates>true</logUpdates>
 			<logPerformance>false</logPerformance>
 		</viewManager>
 
