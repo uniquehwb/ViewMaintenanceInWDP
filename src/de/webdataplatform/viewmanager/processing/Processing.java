@@ -479,19 +479,27 @@ public class Processing implements Runnable{
 		
 			CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
 			
-			key = columns.get(cAV.getAggregationKey());
+//			key = columns.get(cAV.getAggregationKey());
 			
 //			getList.add(Bytes.toBytes(cAV.getAggregationValue()));
 			if (columns.get(cAV.getAggregationKey()) != null) {
-				key=columns.get(cAV.getAggregationValue());
+				key=columns.get(cAV.getAggregationKey());
 			} else {
 				Iterator it = columns.entrySet().iterator();
 			    while (it.hasNext()) {
 			        Map.Entry pair = (Map.Entry)it.next();
 			        String rowKey = (String) pair.getKey();
 			        // To be changed according to aggregation key
-			        if (rowKey.contains("k")) {
-						key = columns.get(rowKey).split("\\|")[1];
+//			        if (rowKey.contains("k")) {
+//			        	key = columns.get(rowKey).split("\\|")[1];
+//						break;
+//					}
+			        if (rowKey.contains("k") && columns.get(rowKey).split("\\|")[1].equals(btu.getKey())) {
+			        	key = columns.get(rowKey).split("\\|")[1];
+						break;
+					}
+			        if (rowKey.contains("k") && columns.get(rowKey).split("\\|")[3].equals(btu.getKey())) {
+			        	key = columns.get(rowKey).split("\\|")[3];
 						break;
 					}
 			        it.remove(); // avoids a ConcurrentModificationException
@@ -623,16 +631,27 @@ public class Processing implements Runnable{
 			}
 			Long deltaValue=0l;
 			if(propagationMode.equals(OperationMode.INSERT))
-				if (columns.get(cAV.getAggregationValue()) != null) {
+				// previous view is not join view, namely pk of the previous view is pk of base table.
+				if (columns.get(cAV.getAggregationValue()) != null) 
+				{
 					deltaValue=Long.parseLong(columns.get(cAV.getAggregationValue()));
-				} else {
+				} 
+				// previous view is join view, pk of both views are aggregation key.
+				else 
+				{
 					Iterator it = columns.entrySet().iterator();
 				    while (it.hasNext()) {
 				        Map.Entry pair = (Map.Entry)it.next();
 				        String key = (String) pair.getKey();
 				        // To be changed according to aggregation key
-				        if (key.contains("k")) {
-							deltaValue += Long.parseLong(columns.get(key).split("\\|")[3]);
+				        // Columns order changed?
+				        if (key.contains("k") && columns.get(key).split("\\|")[1].equals(btu.getKey())) {
+							deltaValue = Long.parseLong(columns.get(key).split("\\|")[3]);
+							break;
+						}
+				        if (key.contains("k") && columns.get(key).split("\\|")[3].equals(btu.getKey())) {
+							deltaValue = Long.parseLong(columns.get(key).split("\\|")[1]);
+							break;
 						}
 				        it.remove(); // avoids a ConcurrentModificationException
 				    }
@@ -793,7 +812,7 @@ public class Processing implements Runnable{
 		if(viewMode.equals(ViewMode.SELECTION)){
 			
 			CreateSelectionView cSV = CreateSelectionView.parse(btu.getViewDefinition());
-			
+			log.updates(this.getClass(), "csv: "+cSV);
 			String valueName = cSV.getSelectionColumn();
 			String operand = cSV.getSelectionOperation();
 			Integer selectValue = Integer.parseInt(cSV.getSelectionValue());
@@ -1098,7 +1117,12 @@ public class Processing implements Runnable{
 	private boolean deleteFromViewTable(String viewTableName, String key, String columnFamily, String checkQualifier, String checkValue, List<byte[]> deleteViewRecord, String signature) {
 		
 		log.updates(this.getClass(), "deleting from view table :"+viewTableName+", key: "+key+", signature: "+signature+", checkQualifier:"+checkQualifier+"checkValue:"+checkValue+" columns: "+BytesUtil.listToString(deleteViewRecord));
-
+		
+		// nothing to delete, when join propagates updates to next aggregation view, this might happen.
+		if (key == "" || key == null) {
+			return true;
+		}
+		
 		boolean succeed=false;
 		if(SystemConfig.FAULTTOLERANCE_TESTANDSET && checkQualifier != null){
 			   
@@ -1107,7 +1131,7 @@ public class Processing implements Runnable{
 			
 			
 			if(SystemConfig.FAULTTOLERANCE_SIGNATURES)
-			succeed = tableService.checkAndDeleteWithSignature(Bytes.toBytes(viewTableName), Bytes.toBytes(key), Bytes.toBytes(columnFamily), Bytes.toBytes(checkQualifier), checkVal, deleteViewRecord, Bytes.toBytes(signature));
+				succeed = tableService.checkAndDeleteWithSignature(Bytes.toBytes(viewTableName), Bytes.toBytes(key), Bytes.toBytes(columnFamily), Bytes.toBytes(checkQualifier), checkVal, deleteViewRecord, Bytes.toBytes(signature));
 			else{
 				succeed = tableService.checkAndDelete(Bytes.toBytes(viewTableName), Bytes.toBytes(key), Bytes.toBytes(columnFamily), Bytes.toBytes(checkQualifier), checkVal, deleteViewRecord);
 			}

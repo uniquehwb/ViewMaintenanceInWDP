@@ -9,7 +9,7 @@ public class SqlClient {
 	
 	public SqlClient() {
 		
-		int queryIndex = 8;
+		int queryIndex = 10;
 		
 		switch(queryIndex) {
 			// Single selection
@@ -44,10 +44,23 @@ public class SqlClient {
 			case 7:
 				queryString = "SELECT colAggKey FROM bt1 INNER JOIN bt2 INNER JOIN bt3";
 				break;
+			// Join and selection
 			case 8:
+				queryString = "SELECT bt1.colAggKey "+
+					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey = bt2.colAggKey "+
+					      "WHERE bt1.colAggVal > 50 AND bt2.colAggVal < 50 ";
+				break;
+			// Join and sum
+			case 9:
 				queryString = "SELECT bt1.colAggKey, SUM (colAggVal) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey = bt2.colAggKey "+
-//					      "WHERE bt1.colAggVal > 50 AND bt2.colAggVal < 50 "+
+					      "GROUP BY colAggKey ";
+				break;
+			// Selection, join and sum
+			case 10:
+				queryString = "SELECT bt1.colAggKey, SUM (colAggVal) "+
+					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey = bt2.colAggKey "+
+					      "WHERE bt1.colAggVal > 40 AND bt2.colAggVal < 60 "+
 					      "GROUP BY colAggKey ";
 				break;
 			default:
@@ -97,7 +110,7 @@ public class SqlClient {
 			case 8:
 				queryString = "SELECT bt1.colAggKey, SUM (colAggVal) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey = bt2.colAggKey "+
-//					      "WHERE bt1.colAggVal > 80 AND bt2.colAggVal < 20 "+
+					      "WHERE bt1.colAggVal > 80 AND bt2.colAggVal < 20 "+
 					      "GROUP BY colAggKey ";
 				break;
 			default:

@@ -74,7 +74,7 @@ public class DatabaseConfig {
 		    	if ("reversejoin".equals(table.getType())) {
 					for (int j = 0; j < table.getBaseTables().size(); j++) {
 						String colName = "colAggVal" + (j+1);
-					    String colFamily = "delta" + (j+1) + "fam1";
+					    String colFamily = table.getBaseTables().get(j).getType() + (j+1) + "fam1";
 					    String colPrefix = "";
 					    String colStartRange = "1";
 					    String colEndRange = "101";
