@@ -496,7 +496,7 @@ public class Client {
 				if(!exists){
 					
 					Put put = generatePut(tableDefinition, rowKey);
-//					log.info(Client.class, "generating Insert: "+rowKey);
+					log.info(Client.class, "generating Insert: "+put);
 					baseTable.checkAndPut(Bytes.toBytes(rowKey), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put);
 					
 					
@@ -506,11 +506,11 @@ public class Client {
 					switch(zahl){ 
 						case 0: 
 							Put update = generatePut(tableDefinition, rowKey);baseTable.put(update);
-//							log.info(Client.class, "generating Insert: "+rowKey);	
+							log.info(Client.class, "generating update: "+update);	
 						break;
 						case 1: 
 							Delete delete = generateDelete(rowKey);baseTable.delete(delete);
-//							log.info(Client.class, "generating delete: "+rowKey);
+							log.info(Client.class, "generating delete: "+delete);
 						break;
 					}
 					

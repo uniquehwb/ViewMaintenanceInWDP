@@ -490,10 +490,6 @@ public class Processing implements Runnable{
 			        Map.Entry pair = (Map.Entry)it.next();
 			        String rowKey = (String) pair.getKey();
 			        // To be changed according to aggregation key
-//			        if (rowKey.contains("k")) {
-//			        	key = columns.get(rowKey).split("\\|")[1];
-//						break;
-//					}
 			        if (rowKey.contains("k") && columns.get(rowKey).split("\\|")[1].equals(btu.getKey())) {
 			        	key = columns.get(rowKey).split("\\|")[1];
 						break;
@@ -816,26 +812,29 @@ public class Processing implements Runnable{
 			String valueName = cSV.getSelectionColumn();
 			String operand = cSV.getSelectionOperation();
 			Integer selectValue = Integer.parseInt(cSV.getSelectionValue());
-			Integer value= Integer.parseInt(columns.get(valueName));
-	//		log.info(this.getClass(), "base table update selection: valueName="+valueName+", operand="+operand+", conditionalValue="+selectValue+", value="+value);
 			
-			
-			
-			boolean isMatching=false;
-			
-			switch(operand){
-			case ">" : isMatching = (value > selectValue);
-				break;
-			case "<" : isMatching = (value < selectValue);
-				break;
-			case "=" : isMatching = (value.equals(selectValue));
-				break;
-			
-			
-			}
-			if(!isMatching){
-//				System.out.println("selection condition not met");
-				return null;
+			if (columns.get(valueName) != null && !columns.get(valueName).isEmpty()) {
+				Integer value= Integer.parseInt(columns.get(valueName));
+		//		log.info(this.getClass(), "base table update selection: valueName="+valueName+", operand="+operand+", conditionalValue="+selectValue+", value="+value);
+				
+				
+				
+				boolean isMatching=false;
+				
+				switch(operand){
+				case ">" : isMatching = (value > selectValue);
+					break;
+				case "<" : isMatching = (value < selectValue);
+					break;
+				case "=" : isMatching = (value.equals(selectValue));
+					break;
+				
+				
+				}
+				if(!isMatching){
+	//							System.out.println("selection condition not met");
+					return null;
+				}
 			}
 
 			
@@ -845,7 +844,6 @@ public class Processing implements Runnable{
 				succeed = insertToViewTable(viewTableName, viewRecordKey, colFams.get(0), null, null, newViewRecord, signature);
 			}	
 			if(propagationMode.equals(OperationMode.DELETE)){
-				
 				deleteViewRecord.addAll(BytesUtil.convertMap(columns).keySet());
 				succeed = deleteFromViewTable(viewTableName, viewRecordKey, colFams.get(0), null, null, deleteViewRecord, signature);
 			}
@@ -917,7 +915,11 @@ public class Processing implements Runnable{
 		
 		if(viewMode.equals(ViewMode.REVERSE_JOIN)){
 			
-				
+			// If there is a delete in selection before join, the viewRecordKey should be checked.
+			if (viewRecordKey == null) {
+				return null;
+			}
+			
 			Put put = new Put(Bytes.toBytes(viewRecordKey));
 			
 			for (String colFam : colFams) {

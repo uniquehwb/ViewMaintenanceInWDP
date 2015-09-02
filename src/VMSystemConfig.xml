@@ -50,7 +50,7 @@
 			<maxReplicasHashring>500</maxReplicasHashring>
 			<displayInterval>10000</displayInterval>
 			<walPollingInterval>1000</walPollingInterval>
-			<logWal>false</logWal>
+			<logWal>true</logWal>
 		</regionServer>
 
 		<client>

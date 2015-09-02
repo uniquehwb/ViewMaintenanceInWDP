@@ -14,7 +14,7 @@ public class SqlClient {
 		switch(queryIndex) {
 			// Single selection
 			case 0: 
-				queryString = "SELECT colAggKey FROM bt1 WHERE colAggVal < 60";
+				queryString = "SELECT colAggKey FROM bt1 WHERE colAggVal < 80";
 				break;
 			// Combined selection
 			case 1: 
@@ -60,7 +60,7 @@ public class SqlClient {
 			case 10:
 				queryString = "SELECT bt1.colAggKey, SUM (colAggVal) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey = bt2.colAggKey "+
-					      "WHERE bt1.colAggVal > 40 AND bt2.colAggVal < 60 "+
+					      "WHERE bt1.colAggVal > 10 AND bt2.colAggVal < 90 "+
 					      "GROUP BY colAggKey ";
 				break;
 			default:
