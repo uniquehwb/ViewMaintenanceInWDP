@@ -242,8 +242,7 @@ public class Processing implements Runnable{
 				btu.getViewMode().equals(ViewMode.AGGREGATION_SUM) ||
 				btu.getViewMode().equals(ViewMode.AGGREGATION_MIN) ||
 				btu.getViewMode().equals(ViewMode.AGGREGATION_MAX) ||
-				btu.getViewMode().equals(ViewMode.INDEX) ||
-				btu.getViewMode().equals(ViewMode.REVERSE_JOIN)){
+				btu.getViewMode().equals(ViewMode.INDEX)){
 			
 			
 			btu.setColumns(removeNullValues(btu.getColumns()));
@@ -257,6 +256,18 @@ public class Processing implements Runnable{
 			}
 			
 		}
+		
+//		if(btu.getViewMode().equals(ViewMode.SELECTION)) {
+//			btu.setColumns(removeNullValues(btu.getColumns()));
+//			btu.setOldColumns(removeNullValues(btu.getOldColumns()));
+//			
+//			if(btu.getType().equals("Put")){
+//				if(btu.getColumns().isEmpty() && !btu.getOldColumns().isEmpty()){
+//					btu.setType("Delete");
+//				}
+//			}
+//		}
+		
 		if(btu.getViewMode().equals(ViewMode.JOIN)){
 			
 //				log.info(this.getClass(), "Nullvalues:"+containsNullValues(btu.getColumns()));
@@ -270,21 +281,23 @@ public class Processing implements Runnable{
 			
 		if(btu.getType().equals("Put")){
 
-			if(!btu.getOldColumns().isEmpty()){
-				long deletionTime = new Date().getTime();
-				propagate(btu, OperationMode.DELETE, signature+"_1");
-				log.performance(this.getClass(), "deletionTime time: "+(new Date().getTime() - deletionTime));
-				
-				long insertionTime = new Date().getTime();
-				propagate(btu, OperationMode.INSERT, signature+"_2");
-				log.performance(this.getClass(), "insertionTime time: "+(new Date().getTime() - insertionTime));
-				
-			}else{
-				
+//			if(!btu.getOldColumns().isEmpty()){
+//				// Problem occurs here, information missing for delete. If change "delete" to "insert",
+//				// all errors disappear.
+//				long deletionTime = new Date().getTime();
+//				propagate(btu, OperationMode.DELETE, signature+"_1");
+//				log.performance(this.getClass(), "deletionTime time: "+(new Date().getTime() - deletionTime));
+//				
+//				long insertionTime = new Date().getTime();
+//				propagate(btu, OperationMode.INSERT, signature+"_2");
+//				log.performance(this.getClass(), "insertionTime time: "+(new Date().getTime() - insertionTime));
+//				
+//			}else{
+//				
 				long insertionTime = new Date().getTime();
 				propagate(btu, OperationMode.INSERT, signature);
 				log.performance(this.getClass(), "insertionTime time: "+(new Date().getTime() - insertionTime));
-			}
+//			}
 			
 				
 		}
@@ -368,7 +381,11 @@ public class Processing implements Runnable{
 			
 			long retrivalTime = new Date().getTime();
 			oldViewRecord = retrieveViewRecord(btu, key, BytesUtil.convertList(colFams), getColumns, Bytes.toBytes(signature));
-//			log.info(this.getClass(), "oldViewRecord:"+BytesUtil.convertMapBack(oldViewRecord));
+			log.info(this.getClass(), "bbbb:"+btu);
+			log.info(this.getClass(), "key:"+key);
+			log.info(this.getClass(), "colFams:"+colFams);
+			log.info(this.getClass(), "getColumns:"+getColumns);
+			log.info(this.getClass(), "oldViewRecord:"+oldViewRecord);
 			log.performance(this.getClass(), "retrivalTime time: "+(new Date().getTime() - retrivalTime));
 			
 //			log.info(this.getClass(), "oldViewRecord: "+BytesUtil.convertMapBack(oldViewRecord));
@@ -553,7 +570,8 @@ public class Processing implements Runnable{
 
 			
 		}
-		if(viewMode.equals(ViewMode.DELTA)){
+		//TODO haha
+		if(viewMode.equals(ViewMode.DELTA) ){
 			
 			CreateDeltaView cDV = CreateDeltaView.parse(btu.getViewDefinition());
 			
@@ -563,6 +581,17 @@ public class Processing implements Runnable{
 			}
 			
 		}
+		if(viewMode.equals(ViewMode.SELECTION) ){
+			
+			CreateSelectionView cSV = CreateSelectionView.parse(btu.getViewDefinition());
+			
+			for(String key : cSV.getColumns()){
+				
+				getList.add(Bytes.toBytes(key+"_new"));
+			}
+			
+		}
+
 		if(viewMode.equals(ViewMode.REVERSE_JOIN)){
 			getList=null;
 		}
@@ -582,7 +611,6 @@ public class Processing implements Runnable{
 			return Result.EMPTY_RESULT;
 		}
 
-		
 		return tableService.get(Bytes.toBytes(btu.getViewTable()), Bytes.toBytes(viewRecordKey), colFams, cols, signature);
 	}
 
@@ -593,11 +621,13 @@ public class Processing implements Runnable{
 		String viewTableName = btu.getViewTable();
 		Boolean succeed=false;
 		Map<String, String> columns=null;
+		Map<String, String> oldColumns = null;
 		Map<byte[], byte[]> newViewRecord = new HashMap<byte[], byte[]>();
 		List<byte[]> deleteViewRecord = new ArrayList<byte[]>();
 
 		
 		columns = btu.getColumns(); 
+		oldColumns = btu.getOldColumns();
 		
 //		if(propagationMode.equals(PropagationMode.INSERT))columns = btu.getColumns(); 
 //		if(propagationMode.equals(PropagationMode.DELETE))columns = btu.getOldColumns(); 
@@ -813,40 +843,72 @@ public class Processing implements Runnable{
 			String operand = cSV.getSelectionOperation();
 			Integer selectValue = Integer.parseInt(cSV.getSelectionValue());
 			
-			if (columns.get(valueName) != null && !columns.get(valueName).isEmpty()) {
-				Integer value= Integer.parseInt(columns.get(valueName));
-		//		log.info(this.getClass(), "base table update selection: valueName="+valueName+", operand="+operand+", conditionalValue="+selectValue+", value="+value);
-				
-				
-				
-				boolean isMatching=false;
-				
-				switch(operand){
-				case ">" : isMatching = (value > selectValue);
-					break;
-				case "<" : isMatching = (value < selectValue);
-					break;
-				case "=" : isMatching = (value.equals(selectValue));
-					break;
-				
-				
-				}
-				if(!isMatching){
-	//							System.out.println("selection condition not met");
-					return null;
-				}
-			}
-
-			
+			// start 
+			Map<byte[], byte[]> oldViewRecord=null;
+			if(oldVM != null)oldViewRecord = oldVM.getFamilyMap(Bytes.toBytes(colFams.get(0)));
+	
 			if(propagationMode.equals(OperationMode.INSERT)){
 				
-				newViewRecord = BytesUtil.convertMap(columns);
-				succeed = insertToViewTable(viewTableName, viewRecordKey, colFams.get(0), null, null, newViewRecord, signature);
+				
+				if(oldViewRecord == null || oldViewRecord.keySet() == null || oldViewRecord.keySet().size() == 0){
+					
+					
+					for (String key : columns.keySet()) {				
+						newViewRecord.put( Bytes.toBytes(key+"_old") , null);
+						newViewRecord.put( Bytes.toBytes(key+"_new") , Bytes.toBytes(columns.get(key)));
+					}
+					
+				}else{
+					
+					for (byte[] key : oldViewRecord.keySet()) {				
+						newViewRecord.put( Bytes.toBytes(Bytes.toString(key).replace("_new", "")+"_old") , oldViewRecord.get(key));
+					}
+					
+					for (String key : columns.keySet()) {
+						if (columns.get(valueName) != null && !columns.get(valueName).isEmpty()) {
+							Integer value= Integer.parseInt(columns.get(valueName));
+					//		log.info(this.getClass(), "base table update selection: valueName="+valueName+", operand="+operand+", conditionalValue="+selectValue+", value="+value);
+							
+							
+							
+							boolean isMatching=false;
+							
+							switch(operand){
+							case ">" : isMatching = (value > selectValue);
+								break;
+							case "<" : isMatching = (value < selectValue);
+								break;
+							case "=" : isMatching = (value.equals(selectValue));
+								break;
+							
+							
+							}
+							if(!isMatching){
+								newViewRecord.put(Bytes.toBytes(key+"_new") , null);
+							} else {
+								newViewRecord.put(Bytes.toBytes(key+"_new") , Bytes.toBytes(columns.get(key)));
+							}
+						}
+						
+					}
+					
+					
+				}
+				
+				
 			}	
 			if(propagationMode.equals(OperationMode.DELETE)){
-				deleteViewRecord.addAll(BytesUtil.convertMap(columns).keySet());
-				succeed = deleteFromViewTable(viewTableName, viewRecordKey, colFams.get(0), null, null, deleteViewRecord, signature);
+				
+				for (byte[] key : oldViewRecord.keySet()) {				
+					newViewRecord.put( Bytes.toBytes(Bytes.toString(key).replace("_new", "")+"_old") , oldViewRecord.get(key));
+					newViewRecord.put( Bytes.toBytes(Bytes.toString(key)) , null);
+				}
+				
+
 			}
+//			log.info(this.getClass(), "viewRecordKey: "+viewRecordKey);
+//			log.info(this.getClass(), "newViewRecord: "+BytesUtil.mapToString(newViewRecord));
+			succeed = insertToViewTable(viewTableName, viewRecordKey, colFams.get(0), null, null, newViewRecord, signature);
 
 		}
 
@@ -916,10 +978,10 @@ public class Processing implements Runnable{
 		if(viewMode.equals(ViewMode.REVERSE_JOIN)){
 			
 			// If there is a delete in selection before join, the viewRecordKey should be checked.
-			if (viewRecordKey == null) {
-				return null;
-			}
-			
+//			if (viewRecordKey == null) {
+//				return null;
+//			}
+			log.info(this.getClass(), "to be joined: "+viewRecordKey);
 			Put put = new Put(Bytes.toBytes(viewRecordKey));
 			
 			for (String colFam : colFams) {

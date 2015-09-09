@@ -1,5 +1,8 @@
 package de.webdataplatform.settings;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.webdataplatform.view.ViewMode;
 
 
@@ -16,6 +19,8 @@ public class CreateSelectionView implements ICreateTable, ICreateView{
 	
 	private String selectionValue;
 	
+	private List<String> columns;
+	
 	private int numOfRegions;
 	
 	private String controlTable;
@@ -25,12 +30,13 @@ public class CreateSelectionView implements ICreateTable, ICreateView{
 		super();
 	}
 
-	public CreateSelectionView(String name, String basetable,
+	public CreateSelectionView(String name, String basetable, List<String> columns,
 			String selectionColumn, String selectionOperation,
 			String selectionValue, int numOfRegions, String controlTable) {
 		super();
 		this.name = name;
 		this.basetable = basetable;
+		this.columns = columns;
 		this.selectionColumn = selectionColumn;
 		this.selectionOperation = selectionOperation;
 		this.selectionValue = selectionValue;
@@ -42,7 +48,15 @@ public class CreateSelectionView implements ICreateTable, ICreateView{
 		
 		String viewDefinition="";
 		
-		viewDefinition = ViewMode.SELECTION.toString()+","+getSelectionColumn()+","+getSelectionOperation()+","+getSelectionValue();
+		String columnsString="";
+		
+		for (int i = 0; i < columns.size(); i++) {
+			if(i < (columns.size()-1))columnsString += columns.get(i)+":";
+			else columnsString += columns.get(i);
+			
+		}
+		
+		viewDefinition = ViewMode.SELECTION.toString()+","+getSelectionColumn()+","+getSelectionOperation()+","+getSelectionValue()+","+columnsString;
 		
 		return viewDefinition;
 		
@@ -57,6 +71,15 @@ public class CreateSelectionView implements ICreateTable, ICreateView{
 		cSV.setSelectionOperation(viewDefintion.split(",")[2]);
 		
 		cSV.setSelectionValue(viewDefintion.split(",")[3]);
+		
+		List<String> columns = new ArrayList<String>();
+		
+		for (String string : viewDefintion.split(",")[4].split(":")) {
+			
+			columns.add(string);
+		}
+		
+		cSV.setColumns(columns);
 		
 		return cSV;
 		
@@ -146,6 +169,16 @@ public class CreateSelectionView implements ICreateTable, ICreateView{
 	public CreateBaseTable copy() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	public List<String> getColumns() {
+		return columns;
+	}
+
+
+
+	public void setColumns(List<String> columns) {
+		this.columns = columns;
 	}
 
 

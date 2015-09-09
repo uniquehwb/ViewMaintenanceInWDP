@@ -199,6 +199,10 @@ public class EvaluationConfig {
 			    		} else if ("selection".equals(table.getType())) {
 			    			String name = table.getName();
 						    String basetable = table.getBaseTables().get(0).getName();
+						    
+						    // Add same columns as delta view into selection view
+						    List<String> columns = Arrays.asList("colAggKey", "colAggVal");
+						    
 						    String selectionKey = "colAggVal";
 						    String selectionOperation = table.getFirstAttr();
 						    String selectionValue = table.getSecondAttr();
@@ -206,7 +210,7 @@ public class EvaluationConfig {
 						    // For view tester
 						    String controlTable = table.getControlTable().getName();
 						    
-						    CreateSelectionView createSelectionView = new CreateSelectionView(name, basetable, selectionKey, selectionOperation, selectionValue, Integer.parseInt(numOfRegions), controlTable);
+						    CreateSelectionView createSelectionView = new CreateSelectionView(name, basetable, columns, selectionKey, selectionOperation, selectionValue, Integer.parseInt(numOfRegions), controlTable);
 						    
 						    createTables.add(createSelectionView);
 			    		} else if ("sum".equals(table.getType()) || "count".equals(table.getType())) {

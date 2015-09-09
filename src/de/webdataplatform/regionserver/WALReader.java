@@ -13,6 +13,10 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.regionserver.wal.HLog;
 import org.apache.hadoop.hbase.regionserver.wal.HLog.Reader;
 import org.apache.hadoop.hbase.regionserver.wal.HLogFactory;
@@ -20,6 +24,7 @@ import org.apache.hadoop.hbase.regionserver.wal.HLogKey;
 import org.apache.hadoop.hbase.regionserver.wal.WALEdit;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import de.webdataplatform.client.Client;
 import de.webdataplatform.log.Log;
 import de.webdataplatform.settings.NetworkConfig;
 import de.webdataplatform.settings.SystemConfig;
@@ -337,7 +342,7 @@ public class WALReader implements Runnable {
 
 
 
-	private BaseTableUpdate retrieveUpdate(HLogKey key, WALEdit edit) {
+	private BaseTableUpdate retrieveUpdate(HLogKey key, WALEdit edit) throws IOException {
 
 		
 		String rowKey = "";
@@ -356,13 +361,30 @@ public class WALReader implements Runnable {
 			String value = Bytes.toString(keyValue.getValue());
 			String colFam = Bytes.toString(keyValue.getFamily());
 			
+			type = KeyValue.Type.codeToType(keyValue.getType()).toString();
+			
 			if(qualifier.startsWith("old_")){
 				
 				oldColumns.put(qualifier.replace("old_", ""), value);
 			}else{
-				
-				columns.put(qualifier, value);
-				colFamilies.put(qualifier, colFam);
+//				if (type.equals("DeleteColumn")) {
+//					Configuration conf = NetworkConfig.getHBaseConfiguration(log);
+//					HTable deltaView = new HTable(conf, "delta1");
+//					Get get = new Get(Bytes.toBytes(rowKey));
+//					get.addColumn(Bytes.toBytes("colfam1"), Bytes.toBytes(qualifier + "_old"));
+//					Result result = deltaView.get(get);
+//					
+//					byte[] val = result.getValue(Bytes.toBytes("colfam1"), Bytes.toBytes("aggregatedValue"));
+//					if(val != null){
+//						log.info(this.getClass(), "pppp: " + val.toString());
+//						columns.put(qualifier, val.toString());
+//						colFamilies.put(qualifier, colFam);
+//					}
+//					deltaView.close();
+//				} else {
+					columns.put(qualifier, value);
+					colFamilies.put(qualifier, colFam);
+//				}
 			}
 			
 			
@@ -373,12 +395,9 @@ public class WALReader implements Runnable {
 //        						if(qualifier.equals("aggregationKey"))aggregationKey = value;
 //        						if(qualifier.equals("aggregationValue"))aggregationValue = value;
 			
-			type = KeyValue.Type.codeToType(keyValue.getType()).toString();
-		
-			
 			
 		}
-
+		
 //        					log.info(this.getClass(), "columns: "+columns);
 		
 //		log.info(this.getClass(), "rowKey: "+rowKey);

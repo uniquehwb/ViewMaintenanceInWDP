@@ -9,12 +9,12 @@ public class SqlClient {
 	
 	public SqlClient() {
 		
-		int queryIndex = 10;
+		int queryIndex = 0;
 		
 		switch(queryIndex) {
 			// Single selection
 			case 0: 
-				queryString = "SELECT colAggKey FROM bt1 WHERE colAggVal < 80";
+				queryString = "SELECT colAggKey FROM bt1 WHERE colAggVal > 10";
 				break;
 			// Combined selection
 			case 1: 
