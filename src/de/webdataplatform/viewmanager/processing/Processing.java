@@ -242,7 +242,8 @@ public class Processing implements Runnable{
 				btu.getViewMode().equals(ViewMode.AGGREGATION_SUM) ||
 				btu.getViewMode().equals(ViewMode.AGGREGATION_MIN) ||
 				btu.getViewMode().equals(ViewMode.AGGREGATION_MAX) ||
-				btu.getViewMode().equals(ViewMode.INDEX)){
+				btu.getViewMode().equals(ViewMode.INDEX) ||
+				btu.getViewMode().equals(ViewMode.SELECTION)){
 			
 			
 			btu.setColumns(removeNullValues(btu.getColumns()));
@@ -250,23 +251,14 @@ public class Processing implements Runnable{
 			
 			if(btu.getType().equals("Put")){
 				if(btu.getColumns().isEmpty() && !btu.getOldColumns().isEmpty()){
+					// Operations are always "put" in WAL, here changing to "delete" is 
+					// just for internal update.
 					btu.setType("Delete");
 					
 				}
 			}
 			
 		}
-		
-//		if(btu.getViewMode().equals(ViewMode.SELECTION)) {
-//			btu.setColumns(removeNullValues(btu.getColumns()));
-//			btu.setOldColumns(removeNullValues(btu.getOldColumns()));
-//			
-//			if(btu.getType().equals("Put")){
-//				if(btu.getColumns().isEmpty() && !btu.getOldColumns().isEmpty()){
-//					btu.setType("Delete");
-//				}
-//			}
-//		}
 		
 		if(btu.getViewMode().equals(ViewMode.JOIN)){
 			
@@ -565,10 +557,7 @@ public class Processing implements Runnable{
 		if(viewMode.equals(ViewMode.AGGREGATION_SUM) || viewMode.equals(ViewMode.AGGREGATION_COUNT) || viewMode.equals(ViewMode.AGGREGATION_MIN) || viewMode.equals(ViewMode.AGGREGATION_MAX)){
 			
 			CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
-			getList.add(Bytes.toBytes(cAV.getAggregationValue()));
-			
-
-			
+			getList.add(Bytes.toBytes(cAV.getAggregationValue()+"_new"));
 		}
 		//TODO haha
 		if(viewMode.equals(ViewMode.DELTA) ){
@@ -636,6 +625,11 @@ public class Processing implements Runnable{
 		
 		if(viewMode.equals(ViewMode.AGGREGATION_SUM) || viewMode.equals(ViewMode.AGGREGATION_COUNT) || viewMode.equals(ViewMode.AGGREGATION_MIN) || viewMode.equals(ViewMode.AGGREGATION_MAX)){
 			
+			// Ignore empty update
+			if (viewRecordKey == null || viewRecordKey.isEmpty()) {
+				return true;
+			}
+			
 			Map<byte[], byte[]> oldViewRecord=null;
 			
 			if(oldVM != null)oldViewRecord = oldVM.getFamilyMap(Bytes.toBytes(colFams.get(0)));
@@ -648,19 +642,28 @@ public class Processing implements Runnable{
 			
 			
 			Long oldValue = null;
-			if(oldViewRecord != null){
-				if(oldViewRecord.get(Bytes.toBytes(cAV.getAggregationValue())) != null){
-					oldValue = Long.parseLong(Bytes.toString(oldViewRecord.get(Bytes.toBytes(cAV.getAggregationValue()))));
-				}
+			if(oldViewRecord != null && oldViewRecord.get(Bytes.toBytes(valueName+"_new")) != null){
+				oldValue = Long.parseLong(Bytes.toString(oldViewRecord.get(Bytes.toBytes(valueName+"_new"))));
 			}else{
 				oldValue = 0l;
 			}
+			log.updates(this.getClass(), "oldValue: "+oldValue);
 			Long deltaValue=0l;
+			Long deltaCount= (long) 1;
 			if(propagationMode.equals(OperationMode.INSERT))
-				// previous view is not join view, namely pk of the previous view is pk of base table.
+				// Previous view is not join view, namely pk of the previous view is pk of base table.
 				if (columns.get(cAV.getAggregationValue()) != null) 
 				{
 					deltaValue=Long.parseLong(columns.get(cAV.getAggregationValue()));
+					// If there is an old value:
+					// for sum, should minus it to get correct delta value;
+					// for count, should not change the count number.
+					if (oldColumns.get(cAV.getAggregationValue()) != null)
+					{
+						deltaValue = deltaValue - Long.parseLong(oldColumns.get(cAV.getAggregationValue()));
+						deltaCount = 0l;
+					}
+					log.updates(this.getClass(), "deltaValue: "+deltaValue);
 				} 
 				// previous view is join view, pk of both views are aggregation key.
 				else 
@@ -694,8 +697,8 @@ public class Processing implements Runnable{
 				
 			}
 			if(viewMode.equals(ViewMode.AGGREGATION_COUNT)){
-				if(propagationMode.equals(OperationMode.INSERT))result = oldValue + 1;
-				if(propagationMode.equals(OperationMode.DELETE))result = oldValue - 1;
+				if(propagationMode.equals(OperationMode.INSERT))result = oldValue + deltaCount;
+				if(propagationMode.equals(OperationMode.DELETE))result = oldValue - deltaCount;
 			}
 			if(viewMode.equals(ViewMode.AGGREGATION_MIN)){
 				
@@ -815,22 +818,33 @@ public class Processing implements Runnable{
 			if(oldViewRecord != null){
 				checkValue = Bytes.toString(oldViewRecord.get(Bytes.toBytes(cAV.getAggregationValue())));
 			}
-			if(result != 0){
-				
-				newViewRecord.put(Bytes.toBytes(valueName), Bytes.toBytes(String.valueOf(result)));
-				log.updates(this.getClass(), viewTableName);
-				log.updates(this.getClass(), viewRecordKey);
-				log.updates(this.getClass(), colFams.get(0));
-				log.updates(this.getClass(), checkQualifier);
-				log.updates(this.getClass(), checkValue);
-				log.updates(this.getClass(), newViewRecord.toString());
-				log.updates(this.getClass(), signature);
-				succeed = insertToViewTable(viewTableName, viewRecordKey, colFams.get(0), checkQualifier, checkValue, newViewRecord, signature);
-			}else{
-				
-				deleteViewRecord.add(Bytes.toBytes(valueName));
-				succeed = deleteFromViewTable(viewTableName, viewRecordKey, colFams.get(0), checkQualifier, checkValue, deleteViewRecord, signature);
+			
+			if(oldViewRecord == null || oldViewRecord.keySet() == null || oldViewRecord.keySet().size() == 0){
+				newViewRecord.put( Bytes.toBytes(valueName+"_old") , null);
+				newViewRecord.put(Bytes.toBytes(valueName+"_new") , Bytes.toBytes(String.valueOf(result)));
+			} else {
+				newViewRecord.put( Bytes.toBytes(valueName+"_old") , Bytes.toBytes(String.valueOf(oldValue)));
+				newViewRecord.put( Bytes.toBytes(valueName+"_new") , Bytes.toBytes(String.valueOf(result)));
 			}
+			
+			succeed = insertToViewTable(viewTableName, viewRecordKey, colFams.get(0), checkQualifier, checkValue, newViewRecord, signature);
+			
+//			if(result != 0){
+//				
+//				newViewRecord.put(Bytes.toBytes(valueName), Bytes.toBytes(String.valueOf(result)));
+//				log.updates(this.getClass(), viewTableName);
+//				log.updates(this.getClass(), viewRecordKey);
+//				log.updates(this.getClass(), colFams.get(0));
+//				log.updates(this.getClass(), checkQualifier);
+//				log.updates(this.getClass(), checkValue);
+//				log.updates(this.getClass(), newViewRecord.toString());
+//				log.updates(this.getClass(), signature);
+//				succeed = insertToViewTable(viewTableName, viewRecordKey, colFams.get(0), checkQualifier, checkValue, newViewRecord, signature);
+//			}else{
+//				
+//				deleteViewRecord.add(Bytes.toBytes(valueName));
+//				succeed = deleteFromViewTable(viewTableName, viewRecordKey, colFams.get(0), checkQualifier, checkValue, deleteViewRecord, signature);
+//			}
 			
 		}
 		
@@ -855,7 +869,31 @@ public class Processing implements Runnable{
 					
 					for (String key : columns.keySet()) {				
 						newViewRecord.put( Bytes.toBytes(key+"_old") , null);
-						newViewRecord.put( Bytes.toBytes(key+"_new") , Bytes.toBytes(columns.get(key)));
+						
+						if (columns.get(valueName) != null && !columns.get(valueName).isEmpty()) {
+							Integer value= Integer.parseInt(columns.get(valueName));
+					//		log.info(this.getClass(), "base table update selection: valueName="+valueName+", operand="+operand+", conditionalValue="+selectValue+", value="+value);
+							
+							
+							
+							boolean isMatching=false;
+							
+							switch(operand){
+							case ">" : isMatching = (value > selectValue);
+								break;
+							case "<" : isMatching = (value < selectValue);
+								break;
+							case "=" : isMatching = (value.equals(selectValue));
+								break;
+							
+							
+							}
+							if(!isMatching){
+								newViewRecord.put(Bytes.toBytes(key+"_new") , null);
+							} else {
+								newViewRecord.put(Bytes.toBytes(key+"_new") , Bytes.toBytes(columns.get(key)));
+							}
+						}
 					}
 					
 				}else{
@@ -1076,6 +1114,7 @@ public class Processing implements Runnable{
 
 		return succeed;
 	}
+	
 	
 
 	public boolean containsNullValues(Map<String, String> map){

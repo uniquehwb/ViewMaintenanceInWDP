@@ -473,7 +473,7 @@ public class Client {
 		update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal"), Bytes.toBytes("10"));
 		log.info(Client.class, "generating update: "+update);
 		baseTable.put(update);
-//		// Delete
+		// Delete
 //		Delete delete = new Delete(Bytes.toBytes(rowKey2));
 //		baseTable.delete(delete);
 //		log.info(Client.class, "generating delete: "+delete);

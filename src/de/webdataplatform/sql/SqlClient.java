@@ -9,7 +9,7 @@ public class SqlClient {
 	
 	public SqlClient() {
 		
-		int queryIndex = 0;
+		int queryIndex = 6;
 		
 		switch(queryIndex) {
 			// Single selection
@@ -18,7 +18,7 @@ public class SqlClient {
 				break;
 			// Combined selection
 			case 1: 
-				queryString = "SELECT colAggKey FROM bt1 WHERE colAggVal < 60 AND colAggVal > 40";
+				queryString = "SELECT colAggKey FROM bt1 WHERE colAggVal < 60 AND colAggVal > 10";
 				break;
 			// Sum aggregation
 			case 2:
@@ -26,7 +26,7 @@ public class SqlClient {
 				break;
 			// Sum aggregation combined with selection
 			case 3:
-				queryString = "SELECT colAggKey, SUM (colAggVal) FROM bt1 WHERE colAggVal > 90 GROUP BY colAggKey";
+				queryString = "SELECT colAggKey, SUM (colAggVal) FROM bt1 WHERE colAggVal > 10 GROUP BY colAggKey";
 				break;
 			// Count aggregation
 			case 4:
@@ -34,7 +34,7 @@ public class SqlClient {
 				break;
 			// Count aggregation combined with selection
 			case 5:
-				queryString = "SELECT colAggKey, COUNT (colAggVal) FROM bt1 WHERE colAggVal > 80 GROUP BY colAggKey";
+				queryString = "SELECT colAggKey, COUNT (colAggVal) FROM bt1 WHERE colAggVal > 10 GROUP BY colAggKey";
 				break;
 			// One join
 			case 6:
