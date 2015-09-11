@@ -9,55 +9,51 @@ public class SqlClient {
 	
 	public SqlClient() {
 		
-		int queryIndex = 6;
+		int queryIndex = 7;
 		
 		switch(queryIndex) {
 			// Single selection
 			case 0: 
-				queryString = "SELECT colAggKey FROM bt1 WHERE colAggVal > 10";
+				queryString = "SELECT colAggKey1 FROM bt1 WHERE colAggVal1 > 10";
 				break;
 			// Combined selection
 			case 1: 
-				queryString = "SELECT colAggKey FROM bt1 WHERE colAggVal < 60 AND colAggVal > 10";
+				queryString = "SELECT colAggKey1 FROM bt1 WHERE colAggVal1 < 60 AND colAggVal1 > 10";
 				break;
 			// Sum aggregation
 			case 2:
-				queryString = "SELECT SUM (colAggVal) FROM bt1 GROUP BY colAggKey";
+				queryString = "SELECT SUM (colAggVal1) FROM bt1 GROUP BY colAggKey1";
 				break;
 			// Sum aggregation combined with selection
 			case 3:
-				queryString = "SELECT colAggKey, SUM (colAggVal) FROM bt1 WHERE colAggVal > 10 GROUP BY colAggKey";
+				queryString = "SELECT colAggKey1, SUM (colAggVal1) FROM bt1 WHERE colAggVal1 > 10 GROUP BY colAggKey1";
 				break;
 			// Count aggregation
 			case 4:
-				queryString = "SELECT COUNT (colAggVal) FROM bt1 GROUP BY colAggKey";
+				queryString = "SELECT COUNT (colAggVal1) FROM bt1 GROUP BY colAggKey1";
 				break;
 			// Count aggregation combined with selection
 			case 5:
-				queryString = "SELECT colAggKey, COUNT (colAggVal) FROM bt1 WHERE colAggVal > 10 GROUP BY colAggKey";
+				queryString = "SELECT colAggKey1, COUNT (colAggVal1) FROM bt1 WHERE colAggVal1 > 10 GROUP BY colAggKey1";
 				break;
 			// One join
 			case 6:
-				queryString = "SELECT colAggKey FROM bt1 INNER JOIN bt2";
-				break;
-			// Two join
-			case 7:
-				queryString = "SELECT colAggKey FROM bt1 INNER JOIN bt2 INNER JOIN bt3";
+				queryString = "SELECT colAggKey1 FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2";
 				break;
 			// Join and selection
-			case 8:
-				queryString = "SELECT bt1.colAggKey "+
-					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey = bt2.colAggKey "+
-					      "WHERE bt1.colAggVal > 50 AND bt2.colAggVal < 50 ";
+			case 7:
+				queryString = "SELECT bt1.colAggKey1 "+
+					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
+					      "WHERE bt1.colAggVal1 > 10 AND bt2.colAggVal2 < 80 ";
 				break;
 			// Join and sum
-			case 9:
+			case 8:
 				queryString = "SELECT bt1.colAggKey, SUM (colAggVal) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey = bt2.colAggKey "+
 					      "GROUP BY colAggKey ";
 				break;
 			// Selection, join and sum
-			case 10:
+			case 9:
 				queryString = "SELECT bt1.colAggKey, SUM (colAggVal) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey = bt2.colAggKey "+
 					      "WHERE bt1.colAggVal > 10 AND bt2.colAggVal < 90 "+

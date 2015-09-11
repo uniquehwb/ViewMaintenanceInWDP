@@ -51,13 +51,13 @@ public class DatabaseConfig {
 		    List<ColumnDefinition> colDefs = new ArrayList<ColumnDefinition>();
 		    
 		    if ("basetable".equals(table.getType())) {
-		    	String colName1 = "colAggKey";
+		    	String colName1 = "colAggKey1";
 			    String colFamily1 = "colfam1";
 			    String colPrefix1 = "x";
 			    String colStartRange1 = "1";
 			    String colEndRange1 = "1001";
 			    
-			    String colName2 = "colAggVal";
+			    String colName2 = "colAggVal1";
 			    String colFamily2 = "colfam1";
 			    String colPrefix2 = "";
 			    String colStartRange2 = "1";
@@ -91,8 +91,18 @@ public class DatabaseConfig {
 				    
 				    ColumnDefinition colDef = new ColumnDefinition(colName, colFamily, colPrefix, Long.parseLong(colStartRange), Long.parseLong(colEndRange));
 				    colDefs.add(colDef);
+				    
+				    // Add join family
+					String colName1 = "";
+				    String colFamily1 = "joinFam1";
+				    String colPrefix1 = "";
+				    String colStartRange1 = "1";
+				    String colEndRange1 = "101";
+				    
+				    ColumnDefinition colDef1 = new ColumnDefinition(colName1, colFamily1, colPrefix1, Long.parseLong(colStartRange1), Long.parseLong(colEndRange1));
+				    colDefs.add(colDef1);
 		    	} else {
-		    		String colName = "colAggVal";
+		    		String colName = "colAggVal1";
 				    String colFamily = "colfam1";
 				    String colPrefix = "";
 				    String colStartRange = "1";

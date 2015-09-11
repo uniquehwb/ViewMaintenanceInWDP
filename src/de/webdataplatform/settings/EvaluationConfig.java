@@ -187,9 +187,13 @@ public class EvaluationConfig {
 						    String type = table.getType();
 						    String basetable = table.getBaseTables().get(0).getName();
 						    
+						    List<String> columns;
+						    if (table.getPKPrefix().contains("k")) {
+						    	columns = Arrays.asList("colAggKey1", "colAggVal1");
+						    } else {
+						    	columns = Arrays.asList("colAggKey2", "colAggVal2");
+						    }
 						    
-						    List<String> columns = Arrays.asList("colAggKey", "colAggVal");
-						 
 						    String numOfRegions = "2";
 						    String controlTable = null;
 						    
@@ -201,14 +205,20 @@ public class EvaluationConfig {
 						    String basetable = table.getBaseTables().get(0).getName();
 						    
 						    // Add same columns as delta view into selection view
-						    List<String> columns = Arrays.asList("colAggKey", "colAggVal");
-						    
-						    String selectionKey = "colAggVal";
+						    List<String> columns;
+						    String selectionKey;
+						    if (table.getPKPrefix().contains("k")) {
+						    	selectionKey = "colAggVal1";
+						    	columns = Arrays.asList("colAggKey1", "colAggVal1");
+						    } else {
+						    	selectionKey = "colAggVal2";
+						    	columns = Arrays.asList("colAggKey2", "colAggVal2");
+						    }
 						    String selectionOperation = table.getFirstAttr();
 						    String selectionValue = table.getSecondAttr();
 						    String numOfRegions = "2";
 						    // For view tester
-						    String controlTable = table.getControlTable().getName();
+						    String controlTable = null;
 						    
 						    CreateSelectionView createSelectionView = new CreateSelectionView(name, basetable, columns, selectionKey, selectionOperation, selectionValue, Integer.parseInt(numOfRegions), controlTable);
 						    
@@ -239,7 +249,8 @@ public class EvaluationConfig {
 						    	
 						    	for (int k = 0; k < joinTableList.size(); k++) {
 								    String tableName = joinTableList.get(k).getName();
-								    String tableKey = "colAggKey";
+								    // TODO: change to aggregation key
+								    String tableKey = "colAggKey" + (k+1);
 								
 								    
 								    

@@ -533,9 +533,12 @@ public class Processing implements Runnable{
 		if(viewMode.equals(ViewMode.REVERSE_JOIN)){
 			
 			CreateReverseJoinView cJPV = CreateReverseJoinView.parse(btu.getViewDefinition());
-			key = columns.get(cJPV.getJoinTables().get(0).getJoinKey());
-
-		
+			for (JoinTable joinTable: cJPV.getJoinTables()){
+				log.updates(this.getClass(), "joinTable: "+joinTable);
+				if (columns.get(joinTable.getJoinKey()) != null && !columns.get(joinTable.getJoinKey()).isEmpty()) {
+					key = columns.get(joinTable.getJoinKey());
+				}
+			}
 		}
 		if(viewMode.equals(ViewMode.JOIN)){
 			
@@ -866,7 +869,10 @@ public class Processing implements Runnable{
 				
 				if(oldViewRecord == null || oldViewRecord.keySet() == null || oldViewRecord.keySet().size() == 0){
 					
-					
+					// Do nothing if both old value and new value are empty.
+					if (columns == null || columns.keySet() == null || columns.values().isEmpty()) {
+						return true;
+					}
 					for (String key : columns.keySet()) {				
 						newViewRecord.put( Bytes.toBytes(key+"_old") , null);
 						
@@ -889,7 +895,8 @@ public class Processing implements Runnable{
 							
 							}
 							if(!isMatching){
-								newViewRecord.put(Bytes.toBytes(key+"_new") , null);
+								// Do nothing if both old value and new value are empty.
+								return true;
 							} else {
 								newViewRecord.put(Bytes.toBytes(key+"_new") , Bytes.toBytes(columns.get(key)));
 							}
@@ -1015,39 +1022,124 @@ public class Processing implements Runnable{
 		
 		if(viewMode.equals(ViewMode.REVERSE_JOIN)){
 			
-			// If there is a delete in selection before join, the viewRecordKey should be checked.
-//			if (viewRecordKey == null) {
-//				return null;
-//			}
+			//TODO: For delete update, viewRecordKey couldn't be found.
 			log.info(this.getClass(), "to be joined: "+viewRecordKey);
 			Put put = new Put(Bytes.toBytes(viewRecordKey));
 			
-			for (String colFam : colFams) {
-				
-				Map<byte[], byte[]> oldViewRecord=null;
-				if(oldVM != null)oldViewRecord = oldVM.getFamilyMap(Bytes.toBytes(colFam));
-				
-				if(oldViewRecord != null){
-					
-					for (byte[] bs : oldViewRecord.keySet()) {
-	//					log.info(this.getClass(), "oldJPRecord"+Bytes.toString(oldViewRecord.get(bs))+"");
-						if(oldViewRecord.get(bs)!= null && !Bytes.toString(oldViewRecord.get(bs)).equals("") && !Bytes.toString(oldViewRecord.get(bs)).equals(" "))
-							put.add(Bytes.toBytes(colFam), bs, oldViewRecord.get(bs));
-						
-					}
-					
-					
-				}
-			}
-			
-			String valueString="";
+			String valueString;
 			
 			if(propagationMode.equals(OperationMode.INSERT)){
 				
-				for(String colKey : btu.getColumns().keySet()){
-					valueString+=colKey+"|"+btu.getColumns().get(colKey)+"|";
+				// Column family includes current update, which contains columns to be updated.
+				String colFam = btu.getBaseTable() + "fam1";
+				
+				// Join partner from another family, which used to build and update join.
+				Map<byte[], byte[]> partnerViewRecord=null;
+				String joinFam = "joinFam1";
+				
+				// Store all base table primary keys of partners.
+				List<String> partnerKeys = new ArrayList<String>();
+				
+				// "colFams" consists partner families, oldVM stores records from partner family,
+				// instead of old columns from base tables.
+				if(oldVM != null)partnerViewRecord = oldVM.getFamilyMap(Bytes.toBytes(colFams.get(0)));
+				
+				// Build join record with composite key as part of column name, and column name is 
+				// combination of composite key + column names from partner + old/new.
+				if (partnerViewRecord != null && !partnerViewRecord.isEmpty()) {
+					for (byte[] bs : partnerViewRecord.keySet()) {
+						log.info(this.getClass(), "kkk: "+ Bytes.toString(bs));
+						String partnerPK = Bytes.toString(bs).split("_")[0];
+						if (!partnerKeys.contains(partnerPK)) {
+							partnerKeys.add(partnerPK);
+						}
+						
+						String compositeColumn;
+						// Composite key should be keep in order.
+						if (btu.getKey().contains("k")) {
+							compositeColumn = btu.getKey() + Bytes.toString(bs);
+						} else {
+							compositeColumn = Bytes.toString(bs).replace(partnerPK, partnerPK + btu.getKey());
+						}
+						
+						put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn), partnerViewRecord.get(bs));
+					}
 				}
-				put.add(Bytes.toBytes(btu.getBaseTable()+"fam1"), Bytes.toBytes(btu.getKey()), Bytes.toBytes(valueString));
+				
+				// Get old columns from btu.
+				Map<String, String> oldRecordColumns=null;
+				oldRecordColumns = btu.getOldColumns(); 
+				if(oldRecordColumns != null && !oldRecordColumns.isEmpty() && !oldRecordColumns.values().isEmpty()){
+					log.info(this.getClass(), "oldRecordColumns: " + oldRecordColumns);
+					for (String column : oldRecordColumns.keySet()) {
+	//					log.info(this.getClass(), "oldJPRecord"+Bytes.toString(oldViewRecord.get(bs))+"");
+						String columnName = btu.getKey() + "_" + column+"_old";
+						String oldValue = oldRecordColumns.get(column);
+						put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnName) , Bytes.toBytes(oldValue));
+						// Corresponding join column.
+						if (!partnerKeys.isEmpty()) {
+							for (String partnerPK: partnerKeys) {
+								String compositeColumn;
+								// Composite key should be keep in order.
+								if (partnerPK.contains("k")) {
+									compositeColumn = partnerPK + columnName;
+								} else {
+									compositeColumn = btu.getKey() + partnerPK + "_" + column + "_old";
+								}
+								put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn) , Bytes.toBytes(oldValue));
+							}
+						}
+					}
+					
+					for(String colKey : btu.getColumns().keySet()){
+						valueString = btu.getColumns().get(colKey);
+						
+						String columnNameNew = btu.getKey() + "_" + colKey + "_new";
+						put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnNameNew), Bytes.toBytes(valueString));
+						// Corresponding join column.
+						if (!partnerKeys.isEmpty()) {
+							for (String partnerPK: partnerKeys) {
+								String compositeColumn;
+								if (partnerPK.contains("k")) {
+									compositeColumn = partnerPK + columnNameNew;
+								} else {
+									compositeColumn = btu.getKey() + partnerPK + "_" + colKey + "_new";
+								}
+								put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn) , Bytes.toBytes(valueString));
+							}
+						}
+					}
+					
+					
+				} else {
+					for(String colKey : btu.getColumns().keySet()){
+						valueString = btu.getColumns().get(colKey);
+						
+						String columnNameOld = btu.getKey() + "_" + colKey + "_old";
+						String columnNameNew = btu.getKey() + "_" + colKey + "_new";
+						put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnNameOld), null);
+						put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnNameNew), Bytes.toBytes(valueString));
+						
+						// Corresponding join column.
+						if (!partnerKeys.isEmpty()) {
+							for (String partnerPK: partnerKeys) {
+								String compositeColumnOld;
+								String compositeColumnNew;
+								if (partnerPK.contains("k")) {
+									compositeColumnOld = partnerPK + columnNameOld;
+									compositeColumnNew = partnerPK + columnNameNew;
+								} else {
+									compositeColumnOld = btu.getKey() + partnerPK + "_" + colKey + "_old";
+									compositeColumnNew = btu.getKey() + partnerPK + "_" + colKey + "_new";
+								}
+								put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumnOld), null);
+								put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumnNew), Bytes.toBytes(valueString));
+							}
+						}
+					}
+				}
+				
+				
 //				log.info(this.getClass(), "INSERT: colfam["+getBaseRecordColFam(btu)+"], col["+btu.getKey()+"], value["+valueString+"]");
 			}	 
 			if(propagationMode.equals(OperationMode.DELETE)){
