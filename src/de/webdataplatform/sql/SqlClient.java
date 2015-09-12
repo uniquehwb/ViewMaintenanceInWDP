@@ -48,9 +48,9 @@ public class SqlClient {
 				break;
 			// Join and sum
 			case 8:
-				queryString = "SELECT bt1.colAggKey, SUM (colAggVal) "+
-					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey = bt2.colAggKey "+
-					      "GROUP BY colAggKey ";
+				queryString = "SELECT bt1.colAggKey1, SUM (colAggVal1) "+
+					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
+					      "GROUP BY colAggKey1 ";
 				break;
 			// Selection, join and sum
 			case 9:

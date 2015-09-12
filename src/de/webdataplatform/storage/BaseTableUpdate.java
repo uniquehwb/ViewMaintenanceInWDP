@@ -372,8 +372,8 @@ public class BaseTableUpdate implements Serializable, Writable{
 		btu.region = this.region;
 		btu.seqNo = this.seqNo;
 		btu.key = this.key;
-		btu.columns = this.columns;
-		btu.oldColumns = this.oldColumns;
+		btu.columns = new HashMap<String, String>(this.columns);
+		btu.oldColumns = new HashMap<String, String>(this.oldColumns);
 		btu.colFamilies = this.colFamilies;
 		btu.type = this.type;
 		btu.viewTable = this.viewTable;
@@ -383,7 +383,6 @@ public class BaseTableUpdate implements Serializable, Writable{
 		return btu;
 		
 	}
-
 
 	
 	

@@ -203,10 +203,8 @@ public class Processing implements Runnable{
 	 * @see de.webdataplatform.viewmanager.IViewManager#pollUpdates()
 	 */
 	public void process(BaseTableUpdate btu){
-
-					propagateUpdate(btu);
-					
-
+		
+			propagateUpdate(btu);
 		
 	}
 	
@@ -273,25 +271,54 @@ public class Processing implements Runnable{
 			
 		if(btu.getType().equals("Put")){
 
-//			if(!btu.getOldColumns().isEmpty()){
-//				// Problem occurs here, information missing for delete. If change "delete" to "insert",
-//				// all errors disappear.
-//				long deletionTime = new Date().getTime();
-//				propagate(btu, OperationMode.DELETE, signature+"_1");
-//				log.performance(this.getClass(), "deletionTime time: "+(new Date().getTime() - deletionTime));
-//				
-//				long insertionTime = new Date().getTime();
-//				propagate(btu, OperationMode.INSERT, signature+"_2");
-//				log.performance(this.getClass(), "insertionTime time: "+(new Date().getTime() - insertionTime));
-//				
-//			}else{
-//				
+			if (btu.getViewMode().equals(ViewMode.REVERSE_JOIN)) {
+				// Check whether join key changed
+				CreateReverseJoinView cJPV = CreateReverseJoinView.parse(btu.getViewDefinition());
+				String newJoinKey = "";
+				String oldJoinKey = "";
+				Map<String, String> columns = btu.getColumns();
+				Map<String, String> oldColumns = btu.getOldColumns();
+				// Check join key in all join tables.
+				for (JoinTable joinTable: cJPV.getJoinTables()){
+					if (columns != null && columns.get(joinTable.getJoinKey()) != null && !columns.get(joinTable.getJoinKey()).isEmpty()) {
+						newJoinKey = columns.get(joinTable.getJoinKey());
+					} 
+					if (oldColumns != null && oldColumns.get(joinTable.getJoinKey()) != null && !oldColumns.get(joinTable.getJoinKey()).isEmpty()) {
+						oldJoinKey = oldColumns.get(joinTable.getJoinKey());
+					}
+					
+					// wrong join table
+					if (newJoinKey == "" && oldJoinKey == "") {
+						continue;
+					}
+					
+					// join key changed
+					if (newJoinKey != "" && oldJoinKey != "" && newJoinKey != oldJoinKey) {
+						// split to a delete and an insert
+						BaseTableUpdate btu1 = btu.copy();
+						BaseTableUpdate btu2 = btu.copy();
+						for (String column : columns.keySet()) {
+							columns.put(column, "");
+						}
+						btu1.setColumns(columns);
+						propagate(btu1, OperationMode.INSERT, signature);
+						
+						for (String oldColumn : oldColumns.keySet()) {
+							oldColumns.put(oldColumn, "");
+						}
+						btu2.setOldColumns(oldColumns);
+						propagate(btu2, OperationMode.INSERT, signature);
+					} else {
+						long insertionTime = new Date().getTime();
+						propagate(btu, OperationMode.INSERT, signature);
+						log.performance(this.getClass(), "insertionTime time: "+(new Date().getTime() - insertionTime));
+					}
+				}
+			}else{
 				long insertionTime = new Date().getTime();
 				propagate(btu, OperationMode.INSERT, signature);
 				log.performance(this.getClass(), "insertionTime time: "+(new Date().getTime() - insertionTime));
-//			}
-			
-				
+			}
 		}
 	
 		if(btu.getType().equals("Delete") || btu.getType().equals("DeleteColumn") || btu.getType().equals("DeleteFamily")){
@@ -478,9 +505,15 @@ public class Processing implements Runnable{
 
 
 		Map<String, String> columns=null;
+		Map<String, String> oldColumns=null;
 		
-		if(propagationMode.equals(OperationMode.INSERT))columns = btu.getColumns(); 
-		if(propagationMode.equals(OperationMode.DELETE))columns = btu.getOldColumns(); 
+		if(propagationMode.equals(OperationMode.INSERT)) {
+			columns = btu.getColumns(); 
+			oldColumns = btu.getOldColumns();
+		}
+		if(propagationMode.equals(OperationMode.DELETE)) {
+			columns = btu.getOldColumns(); 
+		}
 		
 		
 
@@ -533,10 +566,17 @@ public class Processing implements Runnable{
 		if(viewMode.equals(ViewMode.REVERSE_JOIN)){
 			
 			CreateReverseJoinView cJPV = CreateReverseJoinView.parse(btu.getViewDefinition());
+			// Check join key in all join tables.
 			for (JoinTable joinTable: cJPV.getJoinTables()){
 				log.updates(this.getClass(), "joinTable: "+joinTable);
-				if (columns.get(joinTable.getJoinKey()) != null && !columns.get(joinTable.getJoinKey()).isEmpty()) {
+				if (columns != null && columns.get(joinTable.getJoinKey()) != null && !columns.get(joinTable.getJoinKey()).isEmpty()) {
 					key = columns.get(joinTable.getJoinKey());
+					return key;
+				} 
+				// For delete, join key only exists in old columns.
+				if (oldColumns != null && oldColumns.get(joinTable.getJoinKey()) != null && !oldColumns.get(joinTable.getJoinKey()).isEmpty()) {
+					key = oldColumns.get(joinTable.getJoinKey());
+					return key;
 				}
 			}
 		}
@@ -1022,8 +1062,11 @@ public class Processing implements Runnable{
 		
 		if(viewMode.equals(ViewMode.REVERSE_JOIN)){
 			
-			//TODO: For delete update, viewRecordKey couldn't be found.
 			log.info(this.getClass(), "to be joined: "+viewRecordKey);
+			if (viewRecordKey == null || viewRecordKey == "") {
+				return true;
+			}
+			
 			Put put = new Put(Bytes.toBytes(viewRecordKey));
 			
 			String valueString;
@@ -1040,8 +1083,8 @@ public class Processing implements Runnable{
 				// Store all base table primary keys of partners.
 				List<String> partnerKeys = new ArrayList<String>();
 				
-				// "colFams" consists partner families, oldVM stores records from partner family,
-				// instead of old columns from base tables.
+				// "colFams" consists of partner families, oldVM stores records from partner family,
+				// instead of old columns from delta view.
 				if(oldVM != null)partnerViewRecord = oldVM.getFamilyMap(Bytes.toBytes(colFams.get(0)));
 				
 				// Build join record with composite key as part of column name, and column name is 
@@ -1054,6 +1097,7 @@ public class Processing implements Runnable{
 							partnerKeys.add(partnerPK);
 						}
 						
+						// Update join columns related to primary key in update.
 						String compositeColumn;
 						// Composite key should be keep in order.
 						if (btu.getKey().contains("k")) {
@@ -1069,11 +1113,15 @@ public class Processing implements Runnable{
 				// Get old columns from btu.
 				Map<String, String> oldRecordColumns=null;
 				oldRecordColumns = btu.getOldColumns(); 
-				if(oldRecordColumns != null && !oldRecordColumns.isEmpty() && !oldRecordColumns.values().isEmpty()){
+				
+				// Update both reverse join columns and join columns related to update. For join
+				// columns, column name is combination of composite key + column names from self
+				// old/new.
+				if(oldRecordColumns != null && !oldRecordColumns.isEmpty() && !containsNullValues(oldRecordColumns)){
 					log.info(this.getClass(), "oldRecordColumns: " + oldRecordColumns);
 					for (String column : oldRecordColumns.keySet()) {
 	//					log.info(this.getClass(), "oldJPRecord"+Bytes.toString(oldViewRecord.get(bs))+"");
-						String columnName = btu.getKey() + "_" + column+"_old";
+						String columnName = btu.getKey() + "_" + column + "_old";
 						String oldValue = oldRecordColumns.get(column);
 						put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnName) , Bytes.toBytes(oldValue));
 						// Corresponding join column.
@@ -1095,7 +1143,14 @@ public class Processing implements Runnable{
 						valueString = btu.getColumns().get(colKey);
 						
 						String columnNameNew = btu.getKey() + "_" + colKey + "_new";
-						put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnNameNew), Bytes.toBytes(valueString));
+						
+						byte[] value;
+						if (valueString != null) {
+							value = Bytes.toBytes(valueString);
+						} else {
+							value = null;
+						}
+						put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnNameNew), value);
 						// Corresponding join column.
 						if (!partnerKeys.isEmpty()) {
 							for (String partnerPK: partnerKeys) {
@@ -1105,7 +1160,7 @@ public class Processing implements Runnable{
 								} else {
 									compositeColumn = btu.getKey() + partnerPK + "_" + colKey + "_new";
 								}
-								put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn) , Bytes.toBytes(valueString));
+								put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn) , value);
 							}
 						}
 					}

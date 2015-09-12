@@ -472,8 +472,8 @@ public class Client {
 			
 			// Update
 			Put update = new Put(Bytes.toBytes(rowKey1));
-			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0001"));
-			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal1"), Bytes.toBytes("10"));
+			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0002"));
+			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal1"), Bytes.toBytes("20"));
 			log.info(Client.class, "generating update: "+update);
 			baseTable.put(update);
 		} else {
@@ -484,7 +484,7 @@ public class Client {
 			log.info(Client.class, "generating Insert: "+put1);
 			baseTable.checkAndPut(Bytes.toBytes(rowKey1), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put1);
 			Put put2 = new Put(Bytes.toBytes(rowKey2));
-			put2.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey2"), Bytes.toBytes("x0001"));
+			put2.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey2"), Bytes.toBytes("x0002"));
 			put2.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal2"), Bytes.toBytes("60"));
 			log.info(Client.class, "generating Insert: "+put2);
 			baseTable.checkAndPut(Bytes.toBytes(rowKey2), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put2);
