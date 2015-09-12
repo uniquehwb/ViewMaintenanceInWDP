@@ -527,21 +527,7 @@ public class Processing implements Runnable{
 			if (columns.get(cAV.getAggregationKey()) != null) {
 				key=columns.get(cAV.getAggregationKey());
 			} else {
-				Iterator it = columns.entrySet().iterator();
-			    while (it.hasNext()) {
-			        Map.Entry pair = (Map.Entry)it.next();
-			        String rowKey = (String) pair.getKey();
-			        // To be changed according to aggregation key
-			        if (rowKey.contains("k") && columns.get(rowKey).split("\\|")[1].equals(btu.getKey())) {
-			        	key = columns.get(rowKey).split("\\|")[1];
-						break;
-					}
-			        if (rowKey.contains("k") && columns.get(rowKey).split("\\|")[3].equals(btu.getKey())) {
-			        	key = columns.get(rowKey).split("\\|")[3];
-						break;
-					}
-			        it.remove(); // avoids a ConcurrentModificationException
-			    }
+				key = btu.getKey();
 			}
 			
 		}
@@ -711,22 +697,22 @@ public class Processing implements Runnable{
 				// previous view is join view, pk of both views are aggregation key.
 				else 
 				{
-					Iterator it = columns.entrySet().iterator();
-				    while (it.hasNext()) {
-				        Map.Entry pair = (Map.Entry)it.next();
-				        String key = (String) pair.getKey();
-				        // To be changed according to aggregation key
-				        // Columns order changed?
-				        if (key.contains("k") && columns.get(key).split("\\|")[1].equals(btu.getKey())) {
-							deltaValue = Long.parseLong(columns.get(key).split("\\|")[3]);
-							break;
+					for (String column: columns.keySet()) {
+						// First part of column name, which is composite key or pk and 
+						// pk should be ignored.
+						String prefix = column.split("_")[0];
+						if (prefix.contains("k") && prefix.contains("l") && column.contains(cAV.getAggregationValue())) {
+							deltaValue += Long.parseLong(columns.get(column));
 						}
-				        if (key.contains("k") && columns.get(key).split("\\|")[3].equals(btu.getKey())) {
-							deltaValue = Long.parseLong(columns.get(key).split("\\|")[1]);
-							break;
+					}
+					for (String oldColumn: oldColumns.keySet()) {
+						// First part of column name, which is composite key or pk and 
+						// pk should be ignored.
+						String prefix = oldColumn.split("_")[0];
+						if (prefix.contains("k") && prefix.contains("l") && oldColumn.contains(cAV.getAggregationValue())) {
+							deltaValue -= Long.parseLong(oldColumns.get(oldColumn));
 						}
-				        it.remove(); // avoids a ConcurrentModificationException
-				    }
+					}
 				}
 			if(propagationMode.equals(OperationMode.DELETE))
 				deltaValue=Long.parseLong(btu.getOldColumns().get(cAV.getAggregationValue()));

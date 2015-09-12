@@ -9,7 +9,7 @@ public class SqlClient {
 	
 	public SqlClient() {
 		
-		int queryIndex = 7;
+		int queryIndex = 8;
 		
 		switch(queryIndex) {
 			// Single selection
