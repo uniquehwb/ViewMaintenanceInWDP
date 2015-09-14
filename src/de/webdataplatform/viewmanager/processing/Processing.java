@@ -240,11 +240,16 @@ public class Processing implements Runnable{
 				btu.getViewMode().equals(ViewMode.AGGREGATION_SUM) ||
 				btu.getViewMode().equals(ViewMode.AGGREGATION_MIN) ||
 				btu.getViewMode().equals(ViewMode.AGGREGATION_MAX) ||
-				btu.getViewMode().equals(ViewMode.INDEX) ||
-				btu.getViewMode().equals(ViewMode.SELECTION)){
+				btu.getViewMode().equals(ViewMode.INDEX)) {
 			
+			// When join key changes, all reverse join pairs related to the old join key should be 
+			// set to empty.
+			if (containsNullValues(btu.getColumns())) {
+				Map<String, String> result = new HashMap<String, String>();
+				btu.setColumns(result);
+			}
 			
-			btu.setColumns(removeNullValues(btu.getColumns()));
+//			btu.setColumns(removeNullValues(btu.getColumns()));
 			btu.setOldColumns(removeNullValues(btu.getOldColumns()));
 			
 			if(btu.getType().equals("Put")){
@@ -258,6 +263,20 @@ public class Processing implements Runnable{
 			
 		}
 		
+		if(btu.getViewMode().equals(ViewMode.SELECTION)) {
+			btu.setColumns(removeNullValues(btu.getColumns()));
+			btu.setOldColumns(removeNullValues(btu.getOldColumns()));
+			
+			if(btu.getType().equals("Put")){
+				if(btu.getColumns().isEmpty() && !btu.getOldColumns().isEmpty()){
+					// Operations are always "put" in WAL, here changing to "delete" is 
+					// just for internal update.
+					btu.setType("Delete");
+					
+				}
+			}
+		}
+				
 		if(btu.getViewMode().equals(ViewMode.JOIN)){
 			
 //				log.info(this.getClass(), "Nullvalues:"+containsNullValues(btu.getColumns()));
@@ -714,8 +733,18 @@ public class Processing implements Runnable{
 						}
 					}
 				}
-			if(propagationMode.equals(OperationMode.DELETE))
-				deltaValue=Long.parseLong(btu.getOldColumns().get(cAV.getAggregationValue()));
+			if(propagationMode.equals(OperationMode.DELETE)) {
+				if (oldColumns.get(cAV.getAggregationValue()) != null) {
+					deltaValue=Long.parseLong(oldColumns.get(cAV.getAggregationValue()));
+				} else {
+					for (String oldColumn: oldColumns.keySet()) {
+						String prefix = oldColumn.split("_")[0];
+						if (prefix.contains("k") && prefix.contains("l") && oldColumn.contains(cAV.getAggregationValue())) {
+							deltaValue += Long.parseLong(oldColumns.get(oldColumn));
+						}
+					}
+				}
+			}
 			
 			Long result = null;
 			
@@ -1070,7 +1099,7 @@ public class Processing implements Runnable{
 				List<String> partnerKeys = new ArrayList<String>();
 				
 				// "colFams" consists of partner families, oldVM stores records from partner family,
-				// instead of old columns from delta view.
+				// instead of old columns from delta view. (l1_d1_o: value)
 				if(oldVM != null)partnerViewRecord = oldVM.getFamilyMap(Bytes.toBytes(colFams.get(0)));
 				
 				// Build join record with composite key as part of column name, and column name is 
@@ -1078,6 +1107,7 @@ public class Processing implements Runnable{
 				if (partnerViewRecord != null && !partnerViewRecord.isEmpty()) {
 					for (byte[] bs : partnerViewRecord.keySet()) {
 						log.info(this.getClass(), "kkk: "+ Bytes.toString(bs));
+						log.info(this.getClass(), "kkk: "+ Bytes.toString(partnerViewRecord.get(bs)));
 						String partnerPK = Bytes.toString(bs).split("_")[0];
 						if (!partnerKeys.contains(partnerPK)) {
 							partnerKeys.add(partnerPK);
@@ -1091,8 +1121,12 @@ public class Processing implements Runnable{
 						} else {
 							compositeColumn = Bytes.toString(bs).replace(partnerPK, partnerPK + btu.getKey());
 						}
-						
-						put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn), partnerViewRecord.get(bs));
+						// Set all join value to null.
+						if (containsNullValues(columns) && compositeColumn.contains("_new")) {
+							put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn), null);
+						} else {
+							put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn), partnerViewRecord.get(bs));
+						}
 					}
 				}
 				
@@ -1109,7 +1143,6 @@ public class Processing implements Runnable{
 	//					log.info(this.getClass(), "oldJPRecord"+Bytes.toString(oldViewRecord.get(bs))+"");
 						String columnName = btu.getKey() + "_" + column + "_old";
 						String oldValue = oldRecordColumns.get(column);
-						put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnName) , Bytes.toBytes(oldValue));
 						// Corresponding join column.
 						if (!partnerKeys.isEmpty()) {
 							for (String partnerPK: partnerKeys) {
@@ -1120,8 +1153,15 @@ public class Processing implements Runnable{
 								} else {
 									compositeColumn = btu.getKey() + partnerPK + "_" + column + "_old";
 								}
+								
 								put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn) , Bytes.toBytes(oldValue));
+								
 							}
+							put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnName) , Bytes.toBytes(oldValue));
+						} else {
+							// If there is no join partners, old value should always be null to avoid
+							// error in next sum view.
+							put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnName) , null);
 						}
 					}
 					
@@ -1139,6 +1179,7 @@ public class Processing implements Runnable{
 						put.add(Bytes.toBytes(colFam), Bytes.toBytes(columnNameNew), value);
 						// Corresponding join column.
 						if (!partnerKeys.isEmpty()) {
+							
 							for (String partnerPK: partnerKeys) {
 								String compositeColumn;
 								if (partnerPK.contains("k")) {
