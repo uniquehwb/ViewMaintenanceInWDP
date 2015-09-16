@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.filter.ValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import de.webdataplatform.log.Log;
@@ -252,12 +253,15 @@ public class Processing implements Runnable{
 //			btu.setColumns(removeNullValues(btu.getColumns()));
 			btu.setOldColumns(removeNullValues(btu.getOldColumns()));
 			
-			if(btu.getType().equals("Put")){
-				if(btu.getColumns().isEmpty() && !btu.getOldColumns().isEmpty()){
-					// Operations are always "put" in WAL, here changing to "delete" is 
-					// just for internal update.
-					btu.setType("Delete");
-					
+			// Base table of aggregation view is not join.
+			if (!btu.getBaseTable().contains("join")) {
+				if(btu.getType().equals("Put")){
+					if(btu.getColumns().isEmpty() && !btu.getOldColumns().isEmpty()){
+						// Operations are always "put" in WAL, here changing to "delete" is 
+						// just for internal update.
+						btu.setType("Delete");
+						
+					}
 				}
 			}
 			
@@ -307,12 +311,12 @@ public class Processing implements Runnable{
 					}
 					
 					// wrong join table
-					if (newJoinKey == "" && oldJoinKey == "") {
+					if (newJoinKey.equals("") && oldJoinKey.equals("")) {
 						continue;
 					}
 					
 					// join key changed
-					if (newJoinKey != "" && oldJoinKey != "" && newJoinKey != oldJoinKey) {
+					if (!newJoinKey.equals("") && !oldJoinKey.equals("") && !newJoinKey.equals(oldJoinKey)) {
 						// split to a delete and an insert
 						BaseTableUpdate btu1 = btu.copy();
 						BaseTableUpdate btu2 = btu.copy();
@@ -326,14 +330,78 @@ public class Processing implements Runnable{
 							oldColumns.put(oldColumn, "");
 						}
 						btu2.setOldColumns(oldColumns);
-						propagate(btu2, OperationMode.INSERT, signature);
+						propagate(btu2, OperationMode.INSERT, signature + "_1");
 					} else {
 						long insertionTime = new Date().getTime();
 						propagate(btu, OperationMode.INSERT, signature);
 						log.performance(this.getClass(), "insertionTime time: "+(new Date().getTime() - insertionTime));
 					}
 				}
-			}else{
+				
+			}
+			else if (btu.getViewMode().equals(ViewMode.AGGREGATION_SUM) && btu.getBaseTable().contains("join")) 
+			{
+				CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
+				String keyName = cAV.getAggregationKey();
+				
+				Map<String, String> columns = btu.getColumns();
+				Map<String, String> oldColumns = btu.getOldColumns();
+				Map<String, String> comKeyAndAggrKeyMap = new HashMap<String, String>();
+				
+				// Get map of composite key and aggregation key.
+				if (columns != null && !columns.isEmpty()) {
+					for (String column: columns.keySet()) {
+						String compositeKey = column.split("_")[0];
+						if (compositeKey.contains("k") && compositeKey.contains("l") && column.contains(keyName) && !comKeyAndAggrKeyMap.containsKey(compositeKey)) {
+							comKeyAndAggrKeyMap.put(compositeKey, columns.get(column));
+						}
+					}
+				} else if (oldColumns != null && !oldColumns.isEmpty()) {
+					for (String oldColumn: oldColumns.keySet()) {
+						String compositeKey = oldColumn.split("_")[0];
+						if (compositeKey.contains("k") && compositeKey.contains("l") && oldColumn.contains(keyName) && !comKeyAndAggrKeyMap.containsKey(compositeKey)) {
+							comKeyAndAggrKeyMap.put(compositeKey, oldColumns.get(oldColumn));
+						}
+					}
+				}
+				
+				int i = 1;
+				log.info(this.getClass(), "comKeyAndAggrKeyMap: " + comKeyAndAggrKeyMap);
+				for (String compositeKey: comKeyAndAggrKeyMap.keySet()) {
+					BaseTableUpdate aggrBtu = btu.copy();
+					Map<String, String> aggrColumns = new HashMap<String, String>();
+					Map<String, String> aggrOldColumns = new HashMap<String, String>();
+					if (columns != null && !columns.isEmpty()) {
+						for (String column: columns.keySet()) { 
+							if (column.contains(compositeKey)) {
+								aggrColumns.put(column, columns.get(column));
+							}
+						}
+					}
+					if (oldColumns != null && !oldColumns.isEmpty()) {
+						for (String oldColumn: oldColumns.keySet()) { 
+							if (oldColumn.contains(compositeKey)) {
+								aggrOldColumns.put(oldColumn, oldColumns.get(oldColumn));
+							}
+						}
+					}
+					aggrBtu.setKey(comKeyAndAggrKeyMap.get(compositeKey));
+					aggrBtu.setColumns(aggrColumns);
+					aggrBtu.setOldColumns(aggrOldColumns);
+					
+					log.info(this.getClass(), "aggrBtu: " + aggrBtu);
+					
+					if(aggrBtu.getColumns().isEmpty() && !aggrBtu.getOldColumns().isEmpty()){
+						propagate(aggrBtu, OperationMode.DELETE, signature + "_" + i);
+					} else {
+						propagate(aggrBtu, OperationMode.INSERT, signature + "_" + i);
+					}
+					i++;
+				}
+				
+			}
+			else
+			{
 				long insertionTime = new Date().getTime();
 				propagate(btu, OperationMode.INSERT, signature);
 				log.performance(this.getClass(), "insertionTime time: "+(new Date().getTime() - insertionTime));
@@ -419,11 +487,6 @@ public class Processing implements Runnable{
 			
 			long retrivalTime = new Date().getTime();
 			oldViewRecord = retrieveViewRecord(btu, key, BytesUtil.convertList(colFams), getColumns, Bytes.toBytes(signature));
-			log.info(this.getClass(), "bbbb:"+btu);
-			log.info(this.getClass(), "key:"+key);
-			log.info(this.getClass(), "colFams:"+colFams);
-			log.info(this.getClass(), "getColumns:"+getColumns);
-			log.info(this.getClass(), "oldViewRecord:"+oldViewRecord);
 			log.performance(this.getClass(), "retrivalTime time: "+(new Date().getTime() - retrivalTime));
 			
 //			log.info(this.getClass(), "oldViewRecord: "+BytesUtil.convertMapBack(oldViewRecord));
@@ -540,9 +603,7 @@ public class Processing implements Runnable{
 		
 			CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
 			
-//			key = columns.get(cAV.getAggregationKey());
-			
-//			getList.add(Bytes.toBytes(cAV.getAggregationValue()));
+			// Previous view is not join view, namely pk of the previous view is pk of base table.
 			if (columns.get(cAV.getAggregationKey()) != null) {
 				key=columns.get(cAV.getAggregationKey());
 			} else {
@@ -1100,7 +1161,11 @@ public class Processing implements Runnable{
 				
 				// "colFams" consists of partner families, oldVM stores records from partner family,
 				// instead of old columns from delta view. (l1_d1_o: value)
+				List<byte[]> getColumns = new ArrayList<byte[]>();
+				getColumns = getViewRecordColumns(btu);
+				oldVM = retrieveViewRecord(btu, viewRecordKey, BytesUtil.convertList(colFams), getColumns, Bytes.toBytes(signature));
 				if(oldVM != null)partnerViewRecord = oldVM.getFamilyMap(Bytes.toBytes(colFams.get(0)));
+				
 				
 				// Build join record with composite key as part of column name, and column name is 
 				// combination of composite key + column names from partner + old/new.

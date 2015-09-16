@@ -23,6 +23,8 @@ import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
+import org.apache.hadoop.hbase.filter.SubstringComparator;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import de.webdataplatform.log.Log;
@@ -303,6 +305,29 @@ public class TableService{
 		
 		
 		
+		return null;
+	}
+	
+	public List<Result> getRowsContainsValue(byte[] tableName, byte[] columnFam, byte[] column, byte[] value) {
+		try {
+			
+			SingleColumnValueFilter filter = new SingleColumnValueFilter(columnFam, column, CompareFilter.CompareOp.EQUAL, new SubstringComparator(Bytes.toString(value))); 
+			filter.setFilterIfMissing(true);
+			Scan scan = new Scan();
+			scan.setFilter(filter);
+			ResultScanner scanner = getTable(Bytes.toString(tableName)).getScanner(scan); 
+			List<Result> results = new ArrayList<Result>();
+			for (Result result : scanner) {
+				results.add(result);
+			} 
+			scanner.close();
+					
+			return results;
+			
+		} catch (IOException e) {
+
+			log.error(this.getClass(), e);
+		}
 		return null;
 	}
 	

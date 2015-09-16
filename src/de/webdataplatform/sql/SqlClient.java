@@ -50,7 +50,7 @@ public class SqlClient {
 			case 8:
 				queryString = "SELECT bt1.colAggKey1, SUM (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
-					      "GROUP BY colAggKey1 ";
+					      "GROUP BY colAggVal2 ";
 				break;
 			// Selection, join and sum
 			case 9:

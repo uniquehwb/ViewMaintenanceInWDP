@@ -451,8 +451,6 @@ public class BaseTableUpdate implements Serializable, Writable{
 	public void setColFamilies(Map<String, String> colFamilies) {
 		this.colFamilies = colFamilies;
 	}
-	
-	
-	
+
 	
 }

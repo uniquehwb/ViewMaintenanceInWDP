@@ -270,6 +270,7 @@ public class EvaluationConfig {
 						    
 						    CreateReverseJoinView createJoinPairView = new CreateReverseJoinView(name, joinTables, Integer.parseInt(numOfRegions), controlTable);
 						    createTables.add(createJoinPairView);
+						    
 			    			
 			    		}
 			    	}
