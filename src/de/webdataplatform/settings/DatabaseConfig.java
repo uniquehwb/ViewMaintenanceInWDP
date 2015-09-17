@@ -94,13 +94,23 @@ public class DatabaseConfig {
 				    
 				    // Add join family
 					String colName1 = "";
-				    String colFamily1 = "joinFam1";
+				    String colFamily1 = "joinfam1";
 				    String colPrefix1 = "";
 				    String colStartRange1 = "1";
 				    String colEndRange1 = "101";
 				    
 				    ColumnDefinition colDef1 = new ColumnDefinition(colName1, colFamily1, colPrefix1, Long.parseLong(colStartRange1), Long.parseLong(colEndRange1));
 				    colDefs.add(colDef1);
+				    
+				    // Add count family
+					String colName2 = "";
+				    String colFamily2 = "countfam1";
+				    String colPrefix2 = "";
+				    String colStartRange2 = "1";
+				    String colEndRange2 = "101";
+				    
+				    ColumnDefinition colDef2 = new ColumnDefinition(colName2, colFamily2, colPrefix2, Long.parseLong(colStartRange2), Long.parseLong(colEndRange2));
+				    colDefs.add(colDef2);
 		    	} else {
 		    		String colName = "colAggVal1";
 				    String colFamily = "colfam1";

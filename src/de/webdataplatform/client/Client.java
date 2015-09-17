@@ -495,10 +495,17 @@ public class Client {
 			log.info(Client.class, "generating Insert: "+put2);
 			baseTable.checkAndPut(Bytes.toBytes(rowKey2), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put2);
 			
+			
+			// Update
+//			Put update = new Put(Bytes.toBytes(rowKey2));
+//			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey2"), Bytes.toBytes("x0002"));
+//			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal2"), Bytes.toBytes("y0001"));
+//			baseTable.put(update);
+//			log.info(Client.class, "generating update: "+update);
 			// Delete
-//			Delete delete = new Delete(Bytes.toBytes(rowKey2));
-//			baseTable.delete(delete);
-//			log.info(Client.class, "generating delete: "+delete);
+			Delete delete = new Delete(Bytes.toBytes(rowKey1));
+			baseTable.delete(delete);
+			log.info(Client.class, "generating delete: "+delete);
 		}
 
 				

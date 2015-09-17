@@ -331,6 +331,20 @@ public class TableService{
 		return null;
 	}
 	
+	public int getColumnValue(byte[] tableName, byte[] rowkey, byte[] columnFam, byte[] column) {
+		try {
+			Get get = new Get(rowkey);
+			get.addColumn(columnFam, column);
+			Result result = getTable(Bytes.toString(tableName)).get(get);
+			byte[] val = result.getValue(columnFam, column);
+			return Bytes.toInt(val);
+		} catch (IOException e) {
+
+			log.error(this.getClass(), e);
+		}
+		return 0;
+	}
+	
 
 	
 	
