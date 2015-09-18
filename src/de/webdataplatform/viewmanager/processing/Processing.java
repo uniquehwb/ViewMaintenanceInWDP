@@ -339,100 +339,129 @@ public class Processing implements Runnable{
 				}
 				
 			}
-			else if (btu.getViewMode().equals(ViewMode.AGGREGATION_SUM) && btu.getBaseTable().contains("join")) 
+			else if (btu.getViewMode().equals(ViewMode.AGGREGATION_SUM) || btu.getViewMode().equals(ViewMode.AGGREGATION_COUNT)) 
 			{
-				CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
-				String keyName = cAV.getAggregationKey();
-				
-				Map<String, String> columns = btu.getColumns();
-				Map<String, String> oldColumns = btu.getOldColumns();
-				Map<String, String> comKeyAndAggrKeyMapNew = new HashMap<String, String>();
-				Map<String, String> comKeyAndAggrKeyMapOld = new HashMap<String, String>();
-				
-				// Get map of composite key and aggregation key.
-				if (columns != null && !columns.isEmpty()) {
-					for (String column: columns.keySet()) {
-						String compositeKey = column.split("_")[0];
-						if (compositeKey.contains("k") && compositeKey.contains("l") && column.contains(keyName) && !comKeyAndAggrKeyMapNew.containsKey(compositeKey)) {
-							comKeyAndAggrKeyMapNew.put(compositeKey, columns.get(column));
+				if (btu.getBaseTable().contains("join")) {
+					CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
+					String keyName = cAV.getAggregationKey();
+					
+					Map<String, String> columns = btu.getColumns();
+					Map<String, String> oldColumns = btu.getOldColumns();
+					Map<String, String> comKeyAndAggrKeyMapNew = new HashMap<String, String>();
+					Map<String, String> comKeyAndAggrKeyMapOld = new HashMap<String, String>();
+					
+					// Get map of composite key and aggregation key.
+					if (columns != null && !columns.isEmpty()) {
+						for (String column: columns.keySet()) {
+							String compositeKey = column.split("_")[0];
+							if (compositeKey.contains("k") && compositeKey.contains("l") && column.contains(keyName) && !comKeyAndAggrKeyMapNew.containsKey(compositeKey)) {
+								comKeyAndAggrKeyMapNew.put(compositeKey, columns.get(column));
+							}
 						}
 					}
-				}
-				if (oldColumns != null && !oldColumns.isEmpty()) {
-					for (String oldColumn: oldColumns.keySet()) {
-						String compositeKey = oldColumn.split("_")[0];
-						if (compositeKey.contains("k") && compositeKey.contains("l") && oldColumn.contains(keyName) && !comKeyAndAggrKeyMapOld.containsKey(compositeKey)) {
-							comKeyAndAggrKeyMapOld.put(compositeKey, oldColumns.get(oldColumn));
+					if (oldColumns != null && !oldColumns.isEmpty()) {
+						for (String oldColumn: oldColumns.keySet()) {
+							String compositeKey = oldColumn.split("_")[0];
+							if (compositeKey.contains("k") && compositeKey.contains("l") && oldColumn.contains(keyName) && !comKeyAndAggrKeyMapOld.containsKey(compositeKey)) {
+								comKeyAndAggrKeyMapOld.put(compositeKey, oldColumns.get(oldColumn));
+							}
 						}
 					}
-				}
-				
-				// update
-				if (comKeyAndAggrKeyMapNew != null && !comKeyAndAggrKeyMapNew.isEmpty() && comKeyAndAggrKeyMapOld != null && !comKeyAndAggrKeyMapOld.isEmpty()) 
-				{
-					int i = 1;
-					for (String comKey: comKeyAndAggrKeyMapNew.keySet()) {
-						// Aggregation key changed
-						if (!comKeyAndAggrKeyMapNew.get(comKey).equals(comKeyAndAggrKeyMapOld.get(comKey))) {
-							// Generate a first delete
-							String oldAggrKey = comKeyAndAggrKeyMapOld.get(comKey);
-							BaseTableUpdate aggrBtu1 = btu.copy();
-							Map<String, String> aggrColumns1 = new HashMap<String, String>();
-							Map<String, String> aggrOldColumns1 = new HashMap<String, String>();
-							
-							if (oldColumns != null && !oldColumns.isEmpty()) {
-								for (String oldColumn: oldColumns.keySet()) { 
-									if (oldColumn.contains(comKey)) {
-										aggrOldColumns1.put(oldColumn, oldColumns.get(oldColumn));
+					
+					// update
+					if (comKeyAndAggrKeyMapNew != null && !comKeyAndAggrKeyMapNew.isEmpty() && comKeyAndAggrKeyMapOld != null && !comKeyAndAggrKeyMapOld.isEmpty()) 
+					{
+						int i = 1;
+						for (String comKey: comKeyAndAggrKeyMapNew.keySet()) {
+							// Aggregation key changed
+							if (!comKeyAndAggrKeyMapNew.get(comKey).equals(comKeyAndAggrKeyMapOld.get(comKey))) {
+								// Generate a first delete
+								String oldAggrKey = comKeyAndAggrKeyMapOld.get(comKey);
+								BaseTableUpdate aggrBtu1 = btu.copy();
+								Map<String, String> aggrColumns1 = new HashMap<String, String>();
+								Map<String, String> aggrOldColumns1 = new HashMap<String, String>();
+								
+								if (oldColumns != null && !oldColumns.isEmpty()) {
+									for (String oldColumn: oldColumns.keySet()) { 
+										if (oldColumn.contains(comKey)) {
+											aggrOldColumns1.put(oldColumn, oldColumns.get(oldColumn));
+										}
 									}
 								}
-							}
-							aggrBtu1.setKey(oldAggrKey);
-							aggrBtu1.setColumns(aggrColumns1);
-							aggrBtu1.setOldColumns(aggrOldColumns1);
-							
-							log.info(this.getClass(), "aggrBtu1: " + aggrBtu1);
-							
-							propagate(aggrBtu1, OperationMode.DELETE, signature + "_" + i);
-							i++;
-							
-							// Generate a second insert
-							String newAggrKey = comKeyAndAggrKeyMapNew.get(comKey);
-							BaseTableUpdate aggrBtu2 = btu.copy();
-							Map<String, String> aggrColumns2 = new HashMap<String, String>();
-							Map<String, String> aggrOldColumns2 = new HashMap<String, String>();
-							
-							if (columns != null && !columns.isEmpty()) {
-								for (String column: columns.keySet()) { 
-									if (column.contains(comKey)) {
-										aggrColumns2.put(column, columns.get(column));
+								aggrBtu1.setKey(oldAggrKey);
+								aggrBtu1.setColumns(aggrColumns1);
+								aggrBtu1.setOldColumns(aggrOldColumns1);
+								
+								log.info(this.getClass(), "aggrBtu1: " + aggrBtu1);
+								
+								propagate(aggrBtu1, OperationMode.DELETE, signature + "_" + i);
+								i++;
+								
+								// Generate a second insert
+								String newAggrKey = comKeyAndAggrKeyMapNew.get(comKey);
+								BaseTableUpdate aggrBtu2 = btu.copy();
+								Map<String, String> aggrColumns2 = new HashMap<String, String>();
+								Map<String, String> aggrOldColumns2 = new HashMap<String, String>();
+								
+								if (columns != null && !columns.isEmpty()) {
+									for (String column: columns.keySet()) { 
+										if (column.contains(comKey)) {
+											aggrColumns2.put(column, columns.get(column));
+										}
 									}
 								}
+								aggrBtu2.setKey(newAggrKey);
+								aggrBtu2.setColumns(aggrColumns2);
+								aggrBtu2.setOldColumns(aggrOldColumns2);
+								
+								log.info(this.getClass(), "aggrBtu2: " + aggrBtu2);
+								
+								propagate(aggrBtu2, OperationMode.INSERT, signature + "_" + i);
+								i++;
+							} 
+							// Aggregation key not changed
+							else 
+							{
+								String newAggrKey = comKeyAndAggrKeyMapNew.get(comKey);
+								BaseTableUpdate aggrBtu = btu.copy();
+								Map<String, String> aggrColumns = new HashMap<String, String>();
+								Map<String, String> aggrOldColumns = new HashMap<String, String>();
+								
+								if (oldColumns != null && !oldColumns.isEmpty()) {
+									for (String oldColumn: oldColumns.keySet()) { 
+										if (oldColumn.contains(comKey)) {
+											aggrOldColumns.put(oldColumn, oldColumns.get(oldColumn));
+										}
+									}
+								}
+								
+								if (columns != null && !columns.isEmpty()) {
+									for (String column: columns.keySet()) { 
+										if (column.contains(comKey)) {
+											aggrColumns.put(column, columns.get(column));
+										}
+									}
+								}
+								aggrBtu.setKey(newAggrKey);
+								aggrBtu.setColumns(aggrColumns);
+								aggrBtu.setOldColumns(aggrOldColumns);
+								
+								log.info(this.getClass(), "aggrBtu: " + aggrBtu);
+								
+								propagate(aggrBtu, OperationMode.INSERT, signature + "_" + i);
+								i++;
 							}
-							aggrBtu2.setKey(newAggrKey);
-							aggrBtu2.setColumns(aggrColumns2);
-							aggrBtu2.setOldColumns(aggrOldColumns2);
-							
-							log.info(this.getClass(), "aggrBtu2: " + aggrBtu2);
-							
-							propagate(aggrBtu2, OperationMode.INSERT, signature + "_" + i);
-							i++;
-						} 
-						// Aggregation key not changed
-						else 
-						{
+						}
+					}
+					// insert
+					else if (comKeyAndAggrKeyMapNew != null && !comKeyAndAggrKeyMapNew.isEmpty())
+					{
+						int i = 1;
+						for (String comKey: comKeyAndAggrKeyMapNew.keySet()) {
 							String newAggrKey = comKeyAndAggrKeyMapNew.get(comKey);
 							BaseTableUpdate aggrBtu = btu.copy();
 							Map<String, String> aggrColumns = new HashMap<String, String>();
 							Map<String, String> aggrOldColumns = new HashMap<String, String>();
-							
-							if (oldColumns != null && !oldColumns.isEmpty()) {
-								for (String oldColumn: oldColumns.keySet()) { 
-									if (oldColumn.contains(comKey)) {
-										aggrOldColumns.put(oldColumn, oldColumns.get(oldColumn));
-									}
-								}
-							}
 							
 							if (columns != null && !columns.isEmpty()) {
 								for (String column: columns.keySet()) { 
@@ -451,62 +480,73 @@ public class Processing implements Runnable{
 							i++;
 						}
 					}
-				}
-				// insert
-				else if (comKeyAndAggrKeyMapNew != null && !comKeyAndAggrKeyMapNew.isEmpty())
-				{
-					int i = 1;
-					for (String comKey: comKeyAndAggrKeyMapNew.keySet()) {
-						String newAggrKey = comKeyAndAggrKeyMapNew.get(comKey);
-						BaseTableUpdate aggrBtu = btu.copy();
-						Map<String, String> aggrColumns = new HashMap<String, String>();
-						Map<String, String> aggrOldColumns = new HashMap<String, String>();
-						
-						if (columns != null && !columns.isEmpty()) {
-							for (String column: columns.keySet()) { 
-								if (column.contains(comKey)) {
-									aggrColumns.put(column, columns.get(column));
+					// delete
+					else if (comKeyAndAggrKeyMapOld != null && !comKeyAndAggrKeyMapOld.isEmpty()) 
+					{
+						int i = 1;
+						for (String comKey: comKeyAndAggrKeyMapOld.keySet()) {
+							String oldAggrKey = comKeyAndAggrKeyMapOld.get(comKey);
+							BaseTableUpdate aggrBtu = btu.copy();
+							Map<String, String> aggrColumns = new HashMap<String, String>();
+							Map<String, String> aggrOldColumns = new HashMap<String, String>();
+							
+							if (oldColumns != null && !oldColumns.isEmpty()) {
+								for (String oldColumn: oldColumns.keySet()) { 
+									if (oldColumn.contains(comKey)) {
+										aggrOldColumns.put(oldColumn, oldColumns.get(oldColumn));
+									}
 								}
 							}
+							aggrBtu.setKey(oldAggrKey);
+							aggrBtu.setColumns(aggrColumns);
+							aggrBtu.setOldColumns(aggrOldColumns);
+							
+							log.info(this.getClass(), "aggrBtu: " + aggrBtu);
+							
+							propagate(aggrBtu, OperationMode.DELETE, signature + "_" + i);
+							i++;
 						}
-						aggrBtu.setKey(newAggrKey);
-						aggrBtu.setColumns(aggrColumns);
-						aggrBtu.setOldColumns(aggrOldColumns);
+					}
+				} else {
+					// Check whether aggregation key changed
+					CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
+					String aggrCol = cAV.getAggregationKey();
+					String newAggrKey = "";
+					String oldAggrKey = "";
+					Map<String, String> columns = btu.getColumns();
+					Map<String, String> oldColumns = btu.getOldColumns();
+					
+					if (columns != null && columns.get(aggrCol) != null && !columns.get(aggrCol).isEmpty()) {
+						newAggrKey = columns.get(aggrCol);
+					} 
+					if (oldColumns != null && oldColumns.get(aggrCol) != null && !oldColumns.get(aggrCol).isEmpty()) {
+						oldAggrKey = oldColumns.get(aggrCol);
+					}
+					
+					// aggregation key changed
+					if (!newAggrKey.equals("") && !oldAggrKey.equals("") && !newAggrKey.equals(oldAggrKey)) {
+						// split to a delete and an insert
+						BaseTableUpdate btu1 = btu.copy();
+						BaseTableUpdate btu2 = btu.copy();
+						for (String column : columns.keySet()) {
+							columns.put(column, "");
+						}
+						btu1.setColumns(columns);
+						propagate(btu1, OperationMode.DELETE, signature);
+						log.info(this.getClass(), "btu1: " + btu1);
 						
-						log.info(this.getClass(), "aggrBtu: " + aggrBtu);
-						
-						propagate(aggrBtu, OperationMode.INSERT, signature + "_" + i);
-						i++;
+						for (String oldColumn : oldColumns.keySet()) {
+							oldColumns.put(oldColumn, "");
+						}
+						btu2.setOldColumns(oldColumns);
+						log.info(this.getClass(), "btu2: " + btu2);
+						propagate(btu2, OperationMode.INSERT, signature + "_1");
+					} else {
+						long insertionTime = new Date().getTime();
+						propagate(btu, OperationMode.INSERT, signature);
+						log.performance(this.getClass(), "insertionTime time: "+(new Date().getTime() - insertionTime));
 					}
 				}
-				// delete
-				else if (comKeyAndAggrKeyMapOld != null && !comKeyAndAggrKeyMapOld.isEmpty()) 
-				{
-					int i = 1;
-					for (String comKey: comKeyAndAggrKeyMapOld.keySet()) {
-						String oldAggrKey = comKeyAndAggrKeyMapOld.get(comKey);
-						BaseTableUpdate aggrBtu = btu.copy();
-						Map<String, String> aggrColumns = new HashMap<String, String>();
-						Map<String, String> aggrOldColumns = new HashMap<String, String>();
-						
-						if (oldColumns != null && !oldColumns.isEmpty()) {
-							for (String oldColumn: oldColumns.keySet()) { 
-								if (oldColumn.contains(comKey)) {
-									aggrOldColumns.put(oldColumn, oldColumns.get(oldColumn));
-								}
-							}
-						}
-						aggrBtu.setKey(oldAggrKey);
-						aggrBtu.setColumns(aggrColumns);
-						aggrBtu.setOldColumns(aggrOldColumns);
-						
-						log.info(this.getClass(), "aggrBtu: " + aggrBtu);
-						
-						propagate(aggrBtu, OperationMode.DELETE, signature + "_" + i);
-						i++;
-					}
-				}
-				
 			}
 			else
 			{
@@ -559,7 +599,6 @@ public class Processing implements Runnable{
 //		String checkValue="";
 
 		
-				
 		List<byte[]> getColumns = new ArrayList<byte[]>();
 		List<String> colFams = null;
 		
@@ -567,14 +606,14 @@ public class Processing implements Runnable{
 		
 		long getKeyTime = new Date().getTime();	
 		key = getViewRecordKey(btu, propagationMode);
-
+		
 		if(viewMode.equals(ViewMode.JOIN)){
 			
 			joinKeys = new ArrayList<String>();
 			
 		}
 		
-		log.performance(this.getClass(), "key:"+key);
+		log.info(this.getClass(), "key:"+key);
 //		log.info(this.getClass(), "key:"+key);
 		log.performance(this.getClass(), "getKey time: "+(new Date().getTime() - getKeyTime));
 		
@@ -855,7 +894,9 @@ public class Processing implements Runnable{
 			if(oldVM != null)oldViewRecord = oldVM.getFamilyMap(Bytes.toBytes(colFams.get(0)));
 			
 			CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
-			log.updates(this.getClass(), "cAV: "+cAV);
+			log.updates(this.getClass(), "oldVM: "+oldVM);
+			log.updates(this.getClass(), "colFams: "+colFams);
+			log.updates(this.getClass(), "oldViewRecord: "+oldViewRecord);
 			
 			String keyName = cAV.getAggregationKey();
 			String valueName = cAV.getAggregationValue();
@@ -869,7 +910,7 @@ public class Processing implements Runnable{
 			}
 			log.updates(this.getClass(), "oldValue: "+oldValue);
 			Long deltaValue=0l;
-			Long deltaCount= (long) 1;
+			Long deltaCount= 0l;
 			if(propagationMode.equals(OperationMode.INSERT))
 				// Previous view is not join view, namely pk of the previous view is pk of base table.
 				if (columns.get(cAV.getAggregationValue()) != null) 
@@ -878,7 +919,7 @@ public class Processing implements Runnable{
 					// If there is an old value:
 					// for sum, should minus it to get correct delta value;
 					// for count, should not change the count number.
-					if (oldColumns.get(cAV.getAggregationValue()) != null)
+					if (oldColumns.get(cAV.getAggregationValue()) != null && !oldColumns.get(cAV.getAggregationValue()).equals(""))
 					{
 						deltaValue = deltaValue - Long.parseLong(oldColumns.get(cAV.getAggregationValue()));
 						deltaCount = 0l;
@@ -894,6 +935,7 @@ public class Processing implements Runnable{
 						String prefix = column.split("_")[0];
 						if (prefix.contains("k") && prefix.contains("l") && column.contains(cAV.getAggregationValue())) {
 							deltaValue += Long.parseLong(columns.get(column));
+							deltaCount++;
 						}
 					}
 					for (String oldColumn: oldColumns.keySet()) {
@@ -902,17 +944,20 @@ public class Processing implements Runnable{
 						String prefix = oldColumn.split("_")[0];
 						if (prefix.contains("k") && prefix.contains("l") && oldColumn.contains(cAV.getAggregationValue())) {
 							deltaValue -= Long.parseLong(oldColumns.get(oldColumn));
+							deltaCount--;
 						}
 					}
 				}
 			if(propagationMode.equals(OperationMode.DELETE)) {
 				if (oldColumns.get(cAV.getAggregationValue()) != null) {
 					deltaValue=Long.parseLong(oldColumns.get(cAV.getAggregationValue()));
+					deltaCount++;
 				} else {
 					for (String oldColumn: oldColumns.keySet()) {
 						String prefix = oldColumn.split("_")[0];
-						if (prefix.contains("k") && prefix.contains("l") && oldColumn.contains(cAV.getAggregationValue())) {
+						if (prefix.contains("k") && prefix.contains("l") && oldColumn.contains(valueName)) {
 							deltaValue += Long.parseLong(oldColumns.get(oldColumn));
+							deltaCount++;
 						}
 					}
 				}

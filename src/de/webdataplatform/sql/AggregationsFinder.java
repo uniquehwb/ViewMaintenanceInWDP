@@ -52,6 +52,10 @@ public class AggregationsFinder implements SelectVisitor {
 						aggregations.add(fun);
 					} else if (fun.getName().equalsIgnoreCase("COUNT")) {
 						aggregations.add(fun);
+					} else if (fun.getName().equalsIgnoreCase("MIN")) {
+						aggregations.add(fun);
+					} else if (fun.getName().equalsIgnoreCase("MAX")) {
+						aggregations.add(fun);
 					} 
 				}
 			}

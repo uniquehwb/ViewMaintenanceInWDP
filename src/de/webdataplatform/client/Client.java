@@ -478,7 +478,7 @@ public class Client {
 			
 			// Update
 			Put update = new Put(Bytes.toBytes(rowKey1));
-			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0001"));
+			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0002"));
 			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal1"), Bytes.toBytes("100"));
 			baseTable.put(update);
 			log.info(Client.class, "generating update: "+update);
@@ -497,15 +497,15 @@ public class Client {
 			
 			
 			// Update
-//			Put update = new Put(Bytes.toBytes(rowKey2));
-//			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey2"), Bytes.toBytes("x0002"));
-//			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal2"), Bytes.toBytes("y0001"));
-//			baseTable.put(update);
-//			log.info(Client.class, "generating update: "+update);
+			Put update = new Put(Bytes.toBytes(rowKey2));
+			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey2"), Bytes.toBytes("x0002"));
+			update.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal2"), Bytes.toBytes("y0001"));
+			baseTable.put(update);
+			log.info(Client.class, "generating update: "+update);
 			// Delete
-			Delete delete = new Delete(Bytes.toBytes(rowKey1));
-			baseTable.delete(delete);
-			log.info(Client.class, "generating delete: "+delete);
+//			Delete delete = new Delete(Bytes.toBytes(rowKey1));
+//			baseTable.delete(delete);
+//			log.info(Client.class, "generating delete: "+delete);
 		}
 
 				

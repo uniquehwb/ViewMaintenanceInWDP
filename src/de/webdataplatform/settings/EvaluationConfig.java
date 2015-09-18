@@ -223,7 +223,7 @@ public class EvaluationConfig {
 						    CreateSelectionView createSelectionView = new CreateSelectionView(name, basetable, columns, selectionKey, selectionOperation, selectionValue, Integer.parseInt(numOfRegions), controlTable);
 						    
 						    createTables.add(createSelectionView);
-			    		} else if ("sum".equals(table.getType()) || "count".equals(table.getType())) {
+			    		} else if ("sum".equals(table.getType()) || "count".equals(table.getType()) || "min".equals(table.getType()) || "max".equals(table.getType())) {
 			    			String name = table.getName();
 						    String type = table.getType();
 						    String basetable = table.getBaseTables().get(0).getName();
