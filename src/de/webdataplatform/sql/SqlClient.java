@@ -9,7 +9,7 @@ public class SqlClient {
 	
 	public SqlClient() {
 		
-		int queryIndex = 2;
+		int queryIndex = 12;
 		
 		switch(queryIndex) {
 			// Single selection
@@ -62,15 +62,27 @@ public class SqlClient {
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
 					      "GROUP BY colAggVal2 ";
 				break;
-			// Selection, join and sum
+			// Join and min
 			case 11:
+				queryString = "SELECT bt1.colAggKey1, MIN (colAggVal1) "+
+					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
+					      "GROUP BY colAggVal2 ";
+				break;
+			// Join and max
+			case 12:
+				queryString = "SELECT bt1.colAggKey1, MAX (colAggVal1) "+
+					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
+					      "GROUP BY colAggVal2 ";
+				break;
+			// Selection, join and sum
+			case 13:
 				queryString = "SELECT bt1.colAggKey1, SUM (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
 					      "WHERE bt1.colAggVal1 < 90 "+
 					      "GROUP BY colAggVal2 ";
 				break;
 			// Selection, join and count
-			case 12:
+			case 14:
 				queryString = "SELECT bt1.colAggKey1, COUNT (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
 					      "WHERE bt1.colAggVal1 < 90 "+

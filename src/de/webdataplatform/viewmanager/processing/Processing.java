@@ -58,8 +58,6 @@ public class Processing implements Runnable{
 	
 	private ConcurrentHashMap<String, String> markers;
 	
-	
-
 	private TableService tableService;
 
 
@@ -243,14 +241,7 @@ public class Processing implements Runnable{
 				btu.getViewMode().equals(ViewMode.AGGREGATION_MAX) ||
 				btu.getViewMode().equals(ViewMode.INDEX)) {
 			
-			// When join key changes, all reverse join pairs related to the old join key should be 
-			// set to empty.
-			if (containsNullValues(btu.getColumns())) {
-				Map<String, String> result = new HashMap<String, String>();
-				btu.setColumns(result);
-			}
-			
-//			btu.setColumns(removeNullValues(btu.getColumns()));
+			btu.setColumns(removeNullValues(btu.getColumns()));
 			btu.setOldColumns(removeNullValues(btu.getOldColumns()));
 			
 			// Base table of aggregation view is not join.
@@ -339,7 +330,10 @@ public class Processing implements Runnable{
 				}
 				
 			}
-			else if (btu.getViewMode().equals(ViewMode.AGGREGATION_SUM) || btu.getViewMode().equals(ViewMode.AGGREGATION_COUNT)) 
+			else if (btu.getViewMode().equals(ViewMode.AGGREGATION_SUM) ||
+						btu.getViewMode().equals(ViewMode.AGGREGATION_COUNT) || 
+						btu.getViewMode().equals(ViewMode.AGGREGATION_MIN) ||
+						btu.getViewMode().equals(ViewMode.AGGREGATION_MAX)) 
 			{
 				if (btu.getBaseTable().contains("join")) {
 					CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
@@ -817,7 +811,6 @@ public class Processing implements Runnable{
 			CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
 			getList.add(Bytes.toBytes(cAV.getAggregationValue()+"_new"));
 		}
-		//TODO haha
 		if(viewMode.equals(ViewMode.DELTA) ){
 			
 			CreateDeltaView cDV = CreateDeltaView.parse(btu.getViewDefinition());
@@ -881,7 +874,6 @@ public class Processing implements Runnable{
 		
 //		log.info(this.getClass(), "columns: "+columns);
 		
-		//TODO: should dismiss update triggered by table doesn't contain aggregation value
 		if(viewMode.equals(ViewMode.AGGREGATION_SUM) || viewMode.equals(ViewMode.AGGREGATION_COUNT) || viewMode.equals(ViewMode.AGGREGATION_MIN) || viewMode.equals(ViewMode.AGGREGATION_MAX)){
 			
 			// Ignore empty update
@@ -921,21 +913,37 @@ public class Processing implements Runnable{
 					// for count, should not change the count number.
 					if (oldColumns.get(cAV.getAggregationValue()) != null && !oldColumns.get(cAV.getAggregationValue()).equals(""))
 					{
-						deltaValue = deltaValue - Long.parseLong(oldColumns.get(cAV.getAggregationValue()));
-						deltaCount = 0l;
+						if (viewMode.equals(ViewMode.AGGREGATION_SUM) || viewMode.equals(ViewMode.AGGREGATION_COUNT)) {
+							deltaValue = deltaValue - Long.parseLong(oldColumns.get(cAV.getAggregationValue()));
+							deltaCount = 0l;
+						}
 					}
 					log.updates(this.getClass(), "deltaValue: "+deltaValue);
 				} 
 				// previous view is join view, pk of both views are aggregation key.
 				else 
 				{
+					long min = Long.MAX_VALUE;
+					long max = Long.MIN_VALUE;
 					for (String column: columns.keySet()) {
 						// First part of column name, which is composite key or pk and 
 						// pk should be ignored.
 						String prefix = column.split("_")[0];
 						if (prefix.contains("k") && prefix.contains("l") && column.contains(cAV.getAggregationValue())) {
-							deltaValue += Long.parseLong(columns.get(column));
-							deltaCount++;
+							if (viewMode.equals(ViewMode.AGGREGATION_MIN)) {
+								if (Long.parseLong(columns.get(column)) < min) {
+									min = Long.parseLong(columns.get(column));
+									deltaValue = min;
+								}
+							} else if (viewMode.equals(ViewMode.AGGREGATION_MAX)) {
+								if (Long.parseLong(columns.get(column)) > max) {
+									max = Long.parseLong(columns.get(column));
+									deltaValue = max;
+								}
+							} else {
+								deltaValue += Long.parseLong(columns.get(column));
+								deltaCount++;
+							}
 						}
 					}
 					for (String oldColumn: oldColumns.keySet()) {
@@ -943,12 +951,16 @@ public class Processing implements Runnable{
 						// pk should be ignored.
 						String prefix = oldColumn.split("_")[0];
 						if (prefix.contains("k") && prefix.contains("l") && oldColumn.contains(cAV.getAggregationValue())) {
-							deltaValue -= Long.parseLong(oldColumns.get(oldColumn));
-							deltaCount--;
+							if (viewMode.equals(ViewMode.AGGREGATION_SUM) || viewMode.equals(ViewMode.AGGREGATION_COUNT)) {
+								deltaValue -= Long.parseLong(oldColumns.get(oldColumn));
+								deltaCount--;
+							}
 						}
 					}
 				}
+			// From some value to null, columns are null while oldColumns are not.
 			if(propagationMode.equals(OperationMode.DELETE)) {
+				// Previous table is not join.
 				if (oldColumns.get(cAV.getAggregationValue()) != null) {
 					deltaValue=Long.parseLong(oldColumns.get(cAV.getAggregationValue()));
 					deltaCount++;
@@ -956,8 +968,22 @@ public class Processing implements Runnable{
 					for (String oldColumn: oldColumns.keySet()) {
 						String prefix = oldColumn.split("_")[0];
 						if (prefix.contains("k") && prefix.contains("l") && oldColumn.contains(valueName)) {
-							deltaValue += Long.parseLong(oldColumns.get(oldColumn));
-							deltaCount++;
+							long min = Long.MAX_VALUE;
+							long max = Long.MIN_VALUE;
+							if (viewMode.equals(ViewMode.AGGREGATION_MIN)) {
+								if (Long.parseLong(oldColumns.get(oldColumn)) < min) {
+									min = Long.parseLong(oldColumns.get(oldColumn));
+									deltaValue = min;
+								}
+							} else if (viewMode.equals(ViewMode.AGGREGATION_MAX)) {
+								if (Long.parseLong(oldColumns.get(oldColumn)) > max) {
+									max = Long.parseLong(oldColumns.get(oldColumn));
+									deltaValue = max;
+								}
+							} else {
+								deltaValue += Long.parseLong(oldColumns.get(oldColumn));
+								deltaCount++;
+							}
 						}
 					}
 				}
@@ -978,33 +1004,57 @@ public class Processing implements Runnable{
 			if(viewMode.equals(ViewMode.AGGREGATION_MIN)){
 				
 				if(propagationMode.equals(OperationMode.INSERT)){
-					
-					newViewRecord.put(Bytes.toBytes(btu.getKey()), Bytes.toBytes(String.valueOf(deltaValue)));
+					// Store all values (key as column name) to scan new minimum value after old 
+					// minimum value is deleted.
+					if (btu.getBaseTable().contains("join")) {
+						String compositeKey = "";
+						for (String column: btu.getColumns().keySet()) {
+							if (column.split("_")[0].contains("k") && column.split("_")[0].contains("l")) {
+								compositeKey = column.split("_")[0];
+								break;
+							}
+						}
+						newViewRecord.put(Bytes.toBytes(compositeKey), Bytes.toBytes(String.valueOf(deltaValue)));
+					} else {
+						newViewRecord.put(Bytes.toBytes(btu.getKey()), Bytes.toBytes(String.valueOf(deltaValue)));
+					}
 					if(oldValue == 0)oldValue = Long.MAX_VALUE;
 					if(deltaValue < oldValue){
-//						log.info(this.getClass(), "oldvalue: "+oldValue);
-//						log.info(this.getClass(), "deltaValue: "+deltaValue);
+						log.info(this.getClass(), "oldvalue: "+oldValue);
+						log.info(this.getClass(), "deltaValue: "+deltaValue);
 						result = deltaValue;
 					}
 					else result = oldValue;
 				}
 				if(propagationMode.equals(OperationMode.DELETE)){
+					String deleteColumn = "";
+					// Column name should be composite key, if previous view is join.
+					if (btu.getBaseTable().contains("join")) {
+						String compositeKey = "";
+						for (String oldColumn: btu.getOldColumns().keySet()) {
+							if (oldColumn.split("_")[0].contains("k") && oldColumn.split("_")[0].contains("l")) {
+								compositeKey = oldColumn.split("_")[0];
+								break;
+							}
+						}
+						deleteColumn = compositeKey;
+					} else {
+						deleteColumn = String.valueOf(btu.getKey());
+					}
 					
-					deleteViewRecord.add(Bytes.toBytes(String.valueOf(btu.getKey())));
+					deleteViewRecord.add(Bytes.toBytes(deleteColumn));
 					deleteFromViewTable(viewTableName, viewRecordKey, colFams.get(0), null, null, deleteViewRecord, signature);
 					deleteViewRecord = new ArrayList<byte[]>();
-					
-					log.updates(this.getClass(), "deltaValue: "+deltaValue);
-					log.updates(this.getClass(), "oldValue: "+oldValue);
-					log.updates(this.getClass(), "equals: "+deltaValue.equals(oldValue));
 					if(deltaValue.equals(oldValue)){
 						
 //						log.info(this.getClass(), "Minimum deleted");
 						
 						Map<String, String> res = BytesUtil.convertMapBack(tableService.get(Bytes.toBytes(btu.getViewTable()), Bytes.toBytes(viewRecordKey), BytesUtil.convertList(colFams), new ArrayList<byte[]>(), null).getFamilyMap(Bytes.toBytes(colFams.get(0))));
-						res.remove(btu.getKey());
-						res.remove(valueName);
-//						log.info(this.getClass(), "res: "+res);
+						log.updates(this.getClass(), "res: "+res);
+						res.remove(deleteColumn);
+						res.remove(valueName+"_old");
+						res.remove(valueName+"_new");
+						log.info(this.getClass(), "res: "+res);
 						
 						Long smallestValue=Long.MAX_VALUE;
 					
@@ -1035,29 +1085,60 @@ public class Processing implements Runnable{
 			if(viewMode.equals(ViewMode.AGGREGATION_MAX)){
 				
 				if(propagationMode.equals(OperationMode.INSERT)){
-					newViewRecord.put(Bytes.toBytes(btu.getKey()), Bytes.toBytes(String.valueOf(deltaValue)));
+					
+					// Store all values (key as column name) to scan new minimum value after old 
+					// minimum value is deleted.
+					if (btu.getBaseTable().contains("join")) {
+						String compositeKey = "";
+						for (String column: btu.getColumns().keySet()) {
+							if (column.split("_")[0].contains("k") && column.split("_")[0].contains("l")) {
+								compositeKey = column.split("_")[0];
+								break;
+							}
+						}
+						newViewRecord.put(Bytes.toBytes(compositeKey), Bytes.toBytes(String.valueOf(deltaValue)));
+					} else {
+						newViewRecord.put(Bytes.toBytes(btu.getKey()), Bytes.toBytes(String.valueOf(deltaValue)));
+					}
 					if(oldValue == 0)oldValue = Long.MIN_VALUE;
-	
-						if(deltaValue > oldValue)result = deltaValue;
-						else result = oldValue;
+					if(deltaValue > oldValue){
+						log.info(this.getClass(), "oldvalue: "+oldValue);
+						log.info(this.getClass(), "deltaValue: "+deltaValue);
+						result = deltaValue;
+					}
+					else result = oldValue;
 					
 				}
 				if(propagationMode.equals(OperationMode.DELETE)){
 					
-					deleteViewRecord.add(Bytes.toBytes(String.valueOf(btu.getKey())));
+					String deleteColumn = "";
+					// Column name should be composite key, if previous view is join.
+					if (btu.getBaseTable().contains("join")) {
+						String compositeKey = "";
+						for (String oldColumn: btu.getOldColumns().keySet()) {
+							if (oldColumn.split("_")[0].contains("k") && oldColumn.split("_")[0].contains("l")) {
+								compositeKey = oldColumn.split("_")[0];
+								break;
+							}
+						}
+						deleteColumn = compositeKey;
+					} else {
+						deleteColumn = String.valueOf(btu.getKey());
+					}
+					
+					deleteViewRecord.add(Bytes.toBytes(deleteColumn));
 					deleteFromViewTable(viewTableName, viewRecordKey, colFams.get(0), null, null, deleteViewRecord, signature);
 					deleteViewRecord = new ArrayList<byte[]>();
-//					System.out.println("deltaValue: "+deltaValue);
-//					System.out.println("oldValue: "+oldValue);
 					if(deltaValue.equals(oldValue)){
 						
-//						log.info(this.getClass(), "Maximum deleted");
+//						log.info(this.getClass(), "Minimum deleted");
 						
-						Map<String, String> res = BytesUtil.convertMapBack(tableService.get(Bytes.toBytes(btu.getViewTable()), Bytes.toBytes(viewRecordKey), BytesUtil.convertList(colFams), new ArrayList<byte[]>(),null).getFamilyMap(Bytes.toBytes(colFams.get(0))));
-						res.remove(btu.getKey());
-						res.remove(valueName);
-//						log.info(this.getClass(), "res: "+res);
-						
+						Map<String, String> res = BytesUtil.convertMapBack(tableService.get(Bytes.toBytes(btu.getViewTable()), Bytes.toBytes(viewRecordKey), BytesUtil.convertList(colFams), new ArrayList<byte[]>(), null).getFamilyMap(Bytes.toBytes(colFams.get(0))));
+						log.updates(this.getClass(), "res: "+res);
+						res.remove(deleteColumn);
+						res.remove(valueName+"_old");
+						res.remove(valueName+"_new");
+						log.info(this.getClass(), "res: "+res);
 						
 						Long biggestValue=Long.MIN_VALUE;
 						
@@ -1076,11 +1157,55 @@ public class Processing implements Runnable{
 						
 						if(biggestValue == Long.MIN_VALUE)biggestValue = 0l;
 						result = biggestValue;
-						
+
 						
 					}else{
 						return null;
 					}
+					
+					
+					
+					
+					
+					
+//					deleteViewRecord.add(Bytes.toBytes(String.valueOf(btu.getKey())));
+//					deleteFromViewTable(viewTableName, viewRecordKey, colFams.get(0), null, null, deleteViewRecord, signature);
+//					deleteViewRecord = new ArrayList<byte[]>();
+////					System.out.println("deltaValue: "+deltaValue);
+////					System.out.println("oldValue: "+oldValue);
+//					if(deltaValue.equals(oldValue)){
+//						
+////						log.info(this.getClass(), "Maximum deleted");
+//						
+//						Map<String, String> res = BytesUtil.convertMapBack(tableService.get(Bytes.toBytes(btu.getViewTable()), Bytes.toBytes(viewRecordKey), BytesUtil.convertList(colFams), new ArrayList<byte[]>(),null).getFamilyMap(Bytes.toBytes(colFams.get(0))));
+//						res.remove(btu.getKey());
+//						res.remove(valueName+"_old");
+//						res.remove(valueName+"_new");
+////						log.info(this.getClass(), "res: "+res);
+//						
+//						
+//						Long biggestValue=Long.MIN_VALUE;
+//						
+//						for (String bs : res.keySet()) {
+//							
+//							try{
+//								Long val = Long.parseLong(res.get(bs));
+//								if(val >= biggestValue)biggestValue =val;
+//							
+//							}catch(Exception e){
+//								
+//							}
+//							
+//						}
+////						log.info(this.getClass(), "new biggest value: "+biggestValue);
+//						
+//						if(biggestValue == Long.MIN_VALUE)biggestValue = 0l;
+//						result = biggestValue;
+//						
+//						
+//					}else{
+//						return null;
+//					}
 				}	
 			}
 
@@ -1334,6 +1459,8 @@ public class Processing implements Runnable{
 							}
 						}
 					}
+//					log.info(this.getClass(), "oldVM: "+ oldVM);
+//					log.info(this.getClass(), "partnerViewRecord: "+ partnerViewRecord);
 					
 					// Build join record with composite key as part of column name, and column name is 
 					// combination of composite key + column names from partner + old/new.
@@ -1357,7 +1484,12 @@ public class Processing implements Runnable{
 							// Set all join value to null.
 							if (containsNullValues(columns) && compositeColumn.contains("_new")) {
 								put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn), null);
-							} else {
+								put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn.replace("_new", "_old")), partnerViewRecord.get(bs));
+							} 
+							else if (containsNullValues(columns) && compositeColumn.contains("_old")) {
+								// Do nothing.
+							}
+							else {
 								put.add(Bytes.toBytes(joinFam), Bytes.toBytes(compositeColumn), partnerViewRecord.get(bs));
 							}
 							
@@ -1366,8 +1498,6 @@ public class Processing implements Runnable{
 							// shouldn't be copied.
 							joinRecord = oldVM.getFamilyMap(Bytes.toBytes(joinFam));
 							if (Bytes.toString(bs).contains("_new") && 
-//								partnerViewRecord.get(bs) != null && 
-//								!Bytes.toString(partnerViewRecord.get(bs)).equals("") &&
 								joinRecord != null && 
 								!joinRecord.isEmpty() && 
 								joinRecord.keySet().contains(Bytes.toBytes(compositeColumn))) 
