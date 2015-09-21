@@ -5,11 +5,12 @@ import java.util.List;
 import net.sf.jsqlparser.JSQLParserException;
 
 public class SqlClient {
+	
 	private String queryString;
 	
+	public static int queryIndex = 9;
+	
 	public SqlClient() {
-		
-		int queryIndex = 12;
 		
 		switch(queryIndex) {
 			// Single selection
@@ -34,56 +35,82 @@ public class SqlClient {
 				break;
 			// Count aggregation combined with selection
 			case 5:
-				queryString = "SELECT colAggKey1, COUNT (colAggVal1) FROM bt1 WHERE colAggVal1 > 10 GROUP BY colAggKey1";
+				queryString = "SELECT COUNT (colAggVal1) FROM bt1 WHERE colAggVal1 > 10 GROUP BY colAggKey1";
 				break;
 			// Min aggregation
 			case 6:
 				queryString = "SELECT MIN (colAggVal1) FROM bt1 GROUP BY colAggKey1";
 				break;
-			// One join
+			// Min aggregation combined with selection
 			case 7:
+				queryString = "SELECT MIN (colAggVal1) FROM bt1 WHERE colAggVal1 < 80 GROUP BY colAggKey1";
+				break;
+			// Max aggregation
+			case 8:
+				queryString = "SELECT MAX (colAggVal1) FROM bt1 GROUP BY colAggKey1";
+				break;
+			// Max aggregation combined with selection
+			case 9:
+				queryString = "SELECT MAX (colAggVal1) FROM bt1 WHERE colAggVal1 < 80 GROUP BY colAggKey1";
+				break;
+			// Join
+			case 10:
 				queryString = "SELECT colAggKey1 FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2";
 				break;
 			// Join and selection
-			case 8:
+			case 11:
 				queryString = "SELECT bt1.colAggKey1 "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
 					      "WHERE bt1.colAggVal1 > 10 AND bt2.colAggVal2 < 80 ";
 				break;
 			// Join and sum
-			case 9:
+			case 12:
 				queryString = "SELECT bt1.colAggKey1, SUM (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
 					      "GROUP BY colAggVal2 ";
 				break;
 			// Join and count
-			case 10:
+			case 13:
 				queryString = "SELECT bt1.colAggKey1, COUNT (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
 					      "GROUP BY colAggVal2 ";
 				break;
 			// Join and min
-			case 11:
+			case 14:
 				queryString = "SELECT bt1.colAggKey1, MIN (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
 					      "GROUP BY colAggVal2 ";
 				break;
 			// Join and max
-			case 12:
+			case 15:
 				queryString = "SELECT bt1.colAggKey1, MAX (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
 					      "GROUP BY colAggVal2 ";
 				break;
 			// Selection, join and sum
-			case 13:
+			case 16:
 				queryString = "SELECT bt1.colAggKey1, SUM (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
 					      "WHERE bt1.colAggVal1 < 90 "+
 					      "GROUP BY colAggVal2 ";
 				break;
 			// Selection, join and count
-			case 14:
+			case 17:
 				queryString = "SELECT bt1.colAggKey1, COUNT (colAggVal1) "+
+					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
+					      "WHERE bt1.colAggVal1 < 90 "+
+					      "GROUP BY colAggVal2 ";
+				break;
+			// Selection, join and min
+			case 18:
+				queryString = "SELECT bt1.colAggKey1, MIN (colAggVal1) "+
+					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
+					      "WHERE bt1.colAggVal1 < 90 "+
+					      "GROUP BY colAggVal2 ";
+				break;
+			// Selection, join and max
+			case 19:
+				queryString = "SELECT bt1.colAggKey1, MAX (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
 					      "WHERE bt1.colAggVal1 < 90 "+
 					      "GROUP BY colAggVal2 ";
@@ -96,7 +123,6 @@ public class SqlClient {
 	
 	// For testing
 	public static void main(String[] args){
-		int queryIndex = 6;
 		String queryString;
 		
 		switch(queryIndex) {

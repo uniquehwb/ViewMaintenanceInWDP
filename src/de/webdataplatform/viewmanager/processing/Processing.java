@@ -16,6 +16,7 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.filter.ValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.omg.CORBA.DATA_CONVERSION;
 
 import de.webdataplatform.log.Log;
 import de.webdataplatform.settings.BytesUtil;
@@ -25,6 +26,7 @@ import de.webdataplatform.settings.CreateIndexView;
 import de.webdataplatform.settings.CreateReverseJoinView;
 import de.webdataplatform.settings.CreateJoinView;
 import de.webdataplatform.settings.CreateSelectionView;
+import de.webdataplatform.settings.DatabaseConfig;
 import de.webdataplatform.settings.JoinTable;
 import de.webdataplatform.settings.SystemConfig;
 import de.webdataplatform.storage.BaseTableUpdate;
@@ -348,7 +350,7 @@ public class Processing implements Runnable{
 					if (columns != null && !columns.isEmpty()) {
 						for (String column: columns.keySet()) {
 							String compositeKey = column.split("_")[0];
-							if (compositeKey.contains("k") && compositeKey.contains("l") && column.contains(keyName) && !comKeyAndAggrKeyMapNew.containsKey(compositeKey)) {
+							if (compositeKey.contains(DatabaseConfig.PKPREFIX.get(0)) && compositeKey.contains(DatabaseConfig.PKPREFIX.get(1)) && column.contains(keyName) && !comKeyAndAggrKeyMapNew.containsKey(compositeKey)) {
 								comKeyAndAggrKeyMapNew.put(compositeKey, columns.get(column));
 							}
 						}
@@ -356,7 +358,7 @@ public class Processing implements Runnable{
 					if (oldColumns != null && !oldColumns.isEmpty()) {
 						for (String oldColumn: oldColumns.keySet()) {
 							String compositeKey = oldColumn.split("_")[0];
-							if (compositeKey.contains("k") && compositeKey.contains("l") && oldColumn.contains(keyName) && !comKeyAndAggrKeyMapOld.containsKey(compositeKey)) {
+							if (compositeKey.contains(DatabaseConfig.PKPREFIX.get(0)) && compositeKey.contains(DatabaseConfig.PKPREFIX.get(1)) && oldColumn.contains(keyName) && !comKeyAndAggrKeyMapOld.containsKey(compositeKey)) {
 								comKeyAndAggrKeyMapOld.put(compositeKey, oldColumns.get(oldColumn));
 							}
 						}
@@ -908,6 +910,7 @@ public class Processing implements Runnable{
 				if (columns.get(cAV.getAggregationValue()) != null) 
 				{
 					deltaValue=Long.parseLong(columns.get(cAV.getAggregationValue()));
+					deltaCount++;
 					// If there is an old value:
 					// for sum, should minus it to get correct delta value;
 					// for count, should not change the count number.
@@ -915,7 +918,7 @@ public class Processing implements Runnable{
 					{
 						if (viewMode.equals(ViewMode.AGGREGATION_SUM) || viewMode.equals(ViewMode.AGGREGATION_COUNT)) {
 							deltaValue = deltaValue - Long.parseLong(oldColumns.get(cAV.getAggregationValue()));
-							deltaCount = 0l;
+							deltaCount--;
 						}
 					}
 					log.updates(this.getClass(), "deltaValue: "+deltaValue);
@@ -929,7 +932,7 @@ public class Processing implements Runnable{
 						// First part of column name, which is composite key or pk and 
 						// pk should be ignored.
 						String prefix = column.split("_")[0];
-						if (prefix.contains("k") && prefix.contains("l") && column.contains(cAV.getAggregationValue())) {
+						if (prefix.contains(DatabaseConfig.PKPREFIX.get(0)) && prefix.contains(DatabaseConfig.PKPREFIX.get(1)) && column.contains(cAV.getAggregationValue())) {
 							if (viewMode.equals(ViewMode.AGGREGATION_MIN)) {
 								if (Long.parseLong(columns.get(column)) < min) {
 									min = Long.parseLong(columns.get(column));
@@ -950,7 +953,7 @@ public class Processing implements Runnable{
 						// First part of column name, which is composite key or pk and 
 						// pk should be ignored.
 						String prefix = oldColumn.split("_")[0];
-						if (prefix.contains("k") && prefix.contains("l") && oldColumn.contains(cAV.getAggregationValue())) {
+						if (prefix.contains(DatabaseConfig.PKPREFIX.get(0)) && prefix.contains(DatabaseConfig.PKPREFIX.get(1)) && oldColumn.contains(cAV.getAggregationValue())) {
 							if (viewMode.equals(ViewMode.AGGREGATION_SUM) || viewMode.equals(ViewMode.AGGREGATION_COUNT)) {
 								deltaValue -= Long.parseLong(oldColumns.get(oldColumn));
 								deltaCount--;
@@ -967,7 +970,7 @@ public class Processing implements Runnable{
 				} else {
 					for (String oldColumn: oldColumns.keySet()) {
 						String prefix = oldColumn.split("_")[0];
-						if (prefix.contains("k") && prefix.contains("l") && oldColumn.contains(valueName)) {
+						if (prefix.contains(DatabaseConfig.PKPREFIX.get(0)) && prefix.contains(DatabaseConfig.PKPREFIX.get(1)) && oldColumn.contains(valueName)) {
 							long min = Long.MAX_VALUE;
 							long max = Long.MIN_VALUE;
 							if (viewMode.equals(ViewMode.AGGREGATION_MIN)) {
@@ -1009,7 +1012,7 @@ public class Processing implements Runnable{
 					if (btu.getBaseTable().contains("join")) {
 						String compositeKey = "";
 						for (String column: btu.getColumns().keySet()) {
-							if (column.split("_")[0].contains("k") && column.split("_")[0].contains("l")) {
+							if (column.split("_")[0].contains(DatabaseConfig.PKPREFIX.get(0)) && column.split("_")[0].contains(DatabaseConfig.PKPREFIX.get(1))) {
 								compositeKey = column.split("_")[0];
 								break;
 							}
@@ -1032,7 +1035,7 @@ public class Processing implements Runnable{
 					if (btu.getBaseTable().contains("join")) {
 						String compositeKey = "";
 						for (String oldColumn: btu.getOldColumns().keySet()) {
-							if (oldColumn.split("_")[0].contains("k") && oldColumn.split("_")[0].contains("l")) {
+							if (oldColumn.split("_")[0].contains(DatabaseConfig.PKPREFIX.get(0)) && oldColumn.split("_")[0].contains(DatabaseConfig.PKPREFIX.get(1))) {
 								compositeKey = oldColumn.split("_")[0];
 								break;
 							}
@@ -1091,7 +1094,7 @@ public class Processing implements Runnable{
 					if (btu.getBaseTable().contains("join")) {
 						String compositeKey = "";
 						for (String column: btu.getColumns().keySet()) {
-							if (column.split("_")[0].contains("k") && column.split("_")[0].contains("l")) {
+							if (column.split("_")[0].contains(DatabaseConfig.PKPREFIX.get(0)) && column.split("_")[0].contains(DatabaseConfig.PKPREFIX.get(1))) {
 								compositeKey = column.split("_")[0];
 								break;
 							}
@@ -1116,7 +1119,7 @@ public class Processing implements Runnable{
 					if (btu.getBaseTable().contains("join")) {
 						String compositeKey = "";
 						for (String oldColumn: btu.getOldColumns().keySet()) {
-							if (oldColumn.split("_")[0].contains("k") && oldColumn.split("_")[0].contains("l")) {
+							if (oldColumn.split("_")[0].contains(DatabaseConfig.PKPREFIX.get(0)) && oldColumn.split("_")[0].contains(DatabaseConfig.PKPREFIX.get(1))) {
 								compositeKey = oldColumn.split("_")[0];
 								break;
 							}
@@ -1476,7 +1479,7 @@ public class Processing implements Runnable{
 							// Update join columns related to primary key in update.
 							String compositeColumn;
 							// Composite key should be keep in order.
-							if (btu.getKey().contains("k")) {
+							if (btu.getKey().contains(DatabaseConfig.PKPREFIX.get(0))) {
 								compositeColumn = btu.getKey() + Bytes.toString(bs);
 							} else {
 								compositeColumn = Bytes.toString(bs).replace(partnerPK, partnerPK + btu.getKey());
@@ -1527,7 +1530,7 @@ public class Processing implements Runnable{
 								for (String partnerPK: partnerKeys) {
 									String compositeColumn;
 									// Composite key should be keep in order.
-									if (partnerPK.contains("k")) {
+									if (partnerPK.contains(DatabaseConfig.PKPREFIX.get(0))) {
 										compositeColumn = partnerPK + columnName;
 									} else {
 										compositeColumn = btu.getKey() + partnerPK + "_" + column + "_old";
@@ -1561,7 +1564,7 @@ public class Processing implements Runnable{
 								
 								for (String partnerPK: partnerKeys) {
 									String compositeColumn;
-									if (partnerPK.contains("k")) {
+									if (partnerPK.contains(DatabaseConfig.PKPREFIX.get(0))) {
 										compositeColumn = partnerPK + columnNameNew;
 									} else {
 										compositeColumn = btu.getKey() + partnerPK + "_" + colKey + "_new";
@@ -1586,7 +1589,7 @@ public class Processing implements Runnable{
 								for (String partnerPK: partnerKeys) {
 									String compositeColumnOld;
 									String compositeColumnNew;
-									if (partnerPK.contains("k")) {
+									if (partnerPK.contains(DatabaseConfig.PKPREFIX.get(0))) {
 										compositeColumnOld = partnerPK + columnNameOld;
 										compositeColumnNew = partnerPK + columnNameNew;
 									} else {

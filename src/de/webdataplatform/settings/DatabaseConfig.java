@@ -16,6 +16,10 @@ public class DatabaseConfig {
 	
 	
 	public static List<TableDefinition> TABLEDEFINITIONS;
+	public static List<String> PKPREFIX = new ArrayList<String>() {{
+		add("k");
+		add("l");
+	}};
 	
 	public static TableDefinition getTableDefinition(String name){
 		
@@ -68,6 +72,7 @@ public class DatabaseConfig {
 			    
 			    colDefs.add(colDef1);
 			    colDefs.add(colDef2);
+			    
 		    }
 		    
 		    if (table.getBaseTables() != null) {
