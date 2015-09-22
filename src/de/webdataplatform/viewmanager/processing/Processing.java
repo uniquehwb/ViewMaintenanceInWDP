@@ -1343,12 +1343,14 @@ public class Processing implements Runnable{
 				
 			}	
 			if(propagationMode.equals(OperationMode.DELETE)){
-				
-				for (byte[] key : oldViewRecord.keySet()) {				
-					newViewRecord.put( Bytes.toBytes(Bytes.toString(key).replace("_new", "")+"_old") , oldViewRecord.get(key));
-					newViewRecord.put( Bytes.toBytes(Bytes.toString(key)) , null);
+				if (oldViewRecord != null && !oldViewRecord.isEmpty()) {
+					for (byte[] key : oldViewRecord.keySet()) {				
+						newViewRecord.put( Bytes.toBytes(Bytes.toString(key).replace("_new", "")+"_old") , oldViewRecord.get(key));
+						newViewRecord.put( Bytes.toBytes(Bytes.toString(key)) , null);
+					}
+				} else {
+					return true;
 				}
-				
 
 			}
 //			log.info(this.getClass(), "viewRecordKey: "+viewRecordKey);

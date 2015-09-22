@@ -8,7 +8,7 @@ public class SqlClient {
 	
 	private String queryString;
 	
-	public static int queryIndex = 9;
+	public static int queryIndex = 3;
 	
 	public SqlClient() {
 		
@@ -61,7 +61,7 @@ public class SqlClient {
 			case 11:
 				queryString = "SELECT bt1.colAggKey1 "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
-					      "WHERE bt1.colAggVal1 > 10 AND bt2.colAggVal2 < 80 ";
+					      "WHERE bt1.colAggVal1 < 80 ";
 				break;
 			// Join and sum
 			case 12:
@@ -91,28 +91,28 @@ public class SqlClient {
 			case 16:
 				queryString = "SELECT bt1.colAggKey1, SUM (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
-					      "WHERE bt1.colAggVal1 < 90 "+
+					      "WHERE bt1.colAggVal1 < 80 "+
 					      "GROUP BY colAggVal2 ";
 				break;
 			// Selection, join and count
 			case 17:
 				queryString = "SELECT bt1.colAggKey1, COUNT (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
-					      "WHERE bt1.colAggVal1 < 90 "+
+					      "WHERE bt1.colAggVal1 < 80 "+
 					      "GROUP BY colAggVal2 ";
 				break;
 			// Selection, join and min
 			case 18:
 				queryString = "SELECT bt1.colAggKey1, MIN (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
-					      "WHERE bt1.colAggVal1 < 90 "+
+					      "WHERE bt1.colAggVal1 < 80 "+
 					      "GROUP BY colAggVal2 ";
 				break;
 			// Selection, join and max
 			case 19:
 				queryString = "SELECT bt1.colAggKey1, MAX (colAggVal1) "+
 					      "FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2 "+
-					      "WHERE bt1.colAggVal1 < 90 "+
+					      "WHERE bt1.colAggVal1 < 80 "+
 					      "GROUP BY colAggVal2 ";
 				break;
 			default:

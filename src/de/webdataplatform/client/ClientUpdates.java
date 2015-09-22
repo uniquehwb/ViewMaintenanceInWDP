@@ -20,10 +20,10 @@ public class ClientUpdates {
 	}
 	
 	public void start() throws IOException {
-		String rowKey1;
-		String rowKey2;
-		String rowKey3;
-		String rowKey4;
+		String rowKey1 = prefix + "0001";
+		String rowKey2 = prefix + "0002";
+		String rowKey3 = prefix + "0003";
+		String rowKey4 = prefix + "0004";
 		
 		Put put1;
 		Put put2;
@@ -46,11 +46,6 @@ public class ClientUpdates {
 			 * Count aggregation combined with selection
 			 */
 			case 0: case 1: case 2: case 3: case 4: case 5:
-				rowKey1 = "k0001";
-				rowKey2 = "k0002";
-				rowKey3 = "k0003";
-				rowKey4 = "k0004";
-				
 				// Insert
 				put1 = new Put(Bytes.toBytes(rowKey1));
 				put1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0001"));
@@ -92,11 +87,6 @@ public class ClientUpdates {
 			 * Min aggregation combined with selection
 			 */
 			case 6: case 7: 
-				rowKey1 = "k0001";
-				rowKey2 = "k0002";
-				rowKey3 = "k0003";
-				rowKey4 = "k0004";
-				
 				// Insert
 				put1 = new Put(Bytes.toBytes(rowKey1));
 				put1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0001"));
@@ -125,16 +115,53 @@ public class ClientUpdates {
 				delete = new Delete(Bytes.toBytes(rowKey1));
 				baseTable.delete(delete);
 				break;
-				/*
-				 * Max aggregation
-				 * Max aggregation combined with selection
-				 */
-				case 8: case 9: 
-					rowKey1 = "k0001";
-					rowKey2 = "k0002";
-					rowKey3 = "k0003";
-					rowKey4 = "k0004";
-					
+			/*
+			 * Max aggregation
+			 * Max aggregation combined with selection
+			 */
+			case 8: case 9: 
+				// Insert
+				put1 = new Put(Bytes.toBytes(rowKey1));
+				put1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0001"));
+				put1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal1"), Bytes.toBytes("30"));
+				baseTable.checkAndPut(Bytes.toBytes(rowKey1), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put1);
+				put2 = new Put(Bytes.toBytes(rowKey2));
+				put2.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0002"));
+				put2.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal1"), Bytes.toBytes("70"));
+				baseTable.checkAndPut(Bytes.toBytes(rowKey2), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put2);
+				put3 = new Put(Bytes.toBytes(rowKey3));
+				put3.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0001"));
+				put3.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal1"), Bytes.toBytes("50"));
+				baseTable.checkAndPut(Bytes.toBytes(rowKey3), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put3);
+				put4 = new Put(Bytes.toBytes(rowKey4));
+				put4.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0001"));
+				put4.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal1"), Bytes.toBytes("90"));
+				baseTable.checkAndPut(Bytes.toBytes(rowKey4), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put4);
+				
+				// Update
+				update1 = new Put(Bytes.toBytes(rowKey3));
+				update1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0002"));
+				update1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal1"), Bytes.toBytes("80"));
+				baseTable.put(update1);
+				
+				// Delete
+				delete = new Delete(Bytes.toBytes(rowKey4));
+				baseTable.delete(delete);
+				break;
+			/*
+			 * Join
+			 * Join and selection
+			 * Join and sum
+			 * Join and count
+			 * Join and min
+			 * Join and max
+			 * Selection, join and sum
+			 * Selection, join and count
+			 * Selection, join and min
+			 * Selection, join and max
+			 */
+			case 10: case 11: case 12: case 13: case 14: case 15: case 16: case 17: case 18: case 19:
+				if (prefix.equals("k")) {
 					// Insert
 					put1 = new Put(Bytes.toBytes(rowKey1));
 					put1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey1"), Bytes.toBytes("x0001"));
@@ -162,7 +189,28 @@ public class ClientUpdates {
 					// Delete
 					delete = new Delete(Bytes.toBytes(rowKey4));
 					baseTable.delete(delete);
-					break;
+				} else if (prefix.equals("l")) {
+					// Insert
+					put1 = new Put(Bytes.toBytes(rowKey1));
+					put1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey2"), Bytes.toBytes("x0001"));
+					put1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal2"), Bytes.toBytes("y0001"));
+					baseTable.checkAndPut(Bytes.toBytes(rowKey1), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put1);
+					put2 = new Put(Bytes.toBytes(rowKey2));
+					put2.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey2"), Bytes.toBytes("x0002"));
+					put2.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal2"), Bytes.toBytes("y0002"));
+					baseTable.checkAndPut(Bytes.toBytes(rowKey2), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put2);
+					put3 = new Put(Bytes.toBytes(rowKey3));
+					put3.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey2"), Bytes.toBytes("x0002"));
+					put3.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal2"), Bytes.toBytes("y0002"));
+					baseTable.checkAndPut(Bytes.toBytes(rowKey3), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put3);
+					
+					// Update
+					update1 = new Put(Bytes.toBytes(rowKey2));
+					update1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggKey2"), Bytes.toBytes("x0002"));
+					update1.add(Bytes.toBytes("colfam1"), Bytes.toBytes("colAggVal2"), Bytes.toBytes("y0001"));
+					baseTable.put(update1);
+				}
+				break;
 		}
 	}
 }

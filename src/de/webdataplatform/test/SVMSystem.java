@@ -307,8 +307,9 @@ public class SVMSystem {
 		readStatisticsLogsRegionServers(experiment.getNumOfRegionServers(), directoryName);
 		readStatisticsLogsViewManagers(experiment.getNumOfViewManagers(), directoryName);
 		readStatisticsLogsClients(experiment.getNumOfClients(), experiment.getCreateBaseTables(), directoryName);
-		log.info(this.getClass(), "exiting....");
-		log.info(this.getClass(), "stopping database....");
+//		log.info(this.getClass(), "exiting....");
+//		log.info(this.getClass(), "stopping database....");
+		log.info(this.getClass(), "view maintenance finished.... ");
 		
 		
 		try {
@@ -320,7 +321,7 @@ public class SVMSystem {
 		
 //		StatisticLog.close();
 		
-		svmHBase.stopAll();
+//		svmHBase.stopAll();
 		
 		
 		readStatisticsLogExperiment(directoryName, experiment);
