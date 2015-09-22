@@ -8,7 +8,7 @@ public class SqlClient {
 	
 	private String queryString;
 	
-	public static int queryIndex = 3;
+	public static int queryIndex = 16;
 	
 	public SqlClient() {
 		

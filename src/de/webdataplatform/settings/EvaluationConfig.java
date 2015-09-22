@@ -27,6 +27,9 @@ public class EvaluationConfig {
 	public static Long CLIENT_FILLTABLESTIMEOUT;
 	public static Boolean CLIENT_CREATECONTROLTABLES;
 	public static Boolean CLIENT_RECREATETABLES;
+	// If true, massive random updates are issued to base tables; if false, specific updates are
+	// issued to base tables to check the correctness of results.
+	public static Boolean CLIENT_PERFORMANCE_TEST;
 	
 	public static Long VIEWMANAGER_KILLDELAY;
 	
@@ -62,6 +65,7 @@ public class EvaluationConfig {
 		    EvaluationConfig.CLIENT_FILLTABLESTIMEOUT = Long.parseLong(config.getString("client.fillTablesTimeout"));
 		    EvaluationConfig.CLIENT_CREATECONTROLTABLES = Boolean.parseBoolean(config.getString("client.createControlTables"));	
 		    EvaluationConfig.CLIENT_RECREATETABLES = Boolean.parseBoolean(config.getString("client.recreateTables"));	
+		    EvaluationConfig.CLIENT_PERFORMANCE_TEST = Boolean.parseBoolean(config.getString("client.performanceTest"));
 		    
 		    EvaluationConfig.VIEWMANAGER_KILLDELAY = Long.parseLong(config.getString("viewManager.killDelay"));	
 		    
@@ -175,8 +179,8 @@ public class EvaluationConfig {
 						    String numOfRegions = "2";
 						    String numOfOperations = "101";
 						    String distribution = "uniform";
-						    String useUpdates = "false";
-						    String useDeletes = "false";
+						    String useUpdates = "true";
+						    String useDeletes = "true";
 						    
 						    CreateBaseTable createBaseTabe = new CreateBaseTable(name, distribution, Long.parseLong(numOfOperations), Integer.parseInt(numOfRegions), Boolean.parseBoolean(useUpdates), Boolean.parseBoolean(useDeletes));
 						    

@@ -452,85 +452,88 @@ public class Client {
 		int sysoutCount=0;
 		long startingTime = new Date().getTime();
 		
-		// Generating updates
-		String prefix = tableDefinition.getPrimaryKey().getPrefix();
-		ClientUpdates clientUpdates = new ClientUpdates(prefix, baseTable, SqlClient.queryIndex);
-		clientUpdates.start();
-
-		
+		if (!EvaluationConfig.CLIENT_PERFORMANCE_TEST) 
+		{
+			// Generating specific updates to check correctness
+			String prefix = tableDefinition.getPrimaryKey().getPrefix();
+			ClientUpdates clientUpdates = new ClientUpdates(prefix, baseTable, SqlClient.queryIndex);
+			clientUpdates.start();
+		} 
+		else 
+		{
+			for (long i = 0; i < numOfOperations; i++) {
 				
-//		for (long i = 0; i < numOfOperations; i++) {
-//			
-//			sysoutCount++;	
-//
-//			long k = tableDefinition.getPrimaryKey().getStartRange();
-//			
-//			if(distribution.equals("uniform"))k+=random.nextInt(new Long(numOfKeys).intValue());
-//			if(distribution.equals("zipf"))k+=zipf.next();
-//			
-//			int digits = String.valueOf(tableDefinition.getPrimaryKey().getEndRange()).length();
-//			
-//			String rowKey="";
-//			
-//			if(tableDefinition.getPrimaryKey().getPrefix() != null)rowKey = tableDefinition.getPrimaryKey().getPrefix();
-//			
-//			for(int x = 0; x < (digits - String.valueOf(k).length());x++)rowKey+="0";
-//			rowKey += k;
-//			
-//			Get get = new Get(Bytes.toBytes(rowKey));
-//			boolean exists;
-//			try {
-//				exists = baseTable.exists(get);
-//	
-//				
-//				
-//				if(sysoutCount == SystemConfig.CLIENT_LOGINTERVAL){
-//					log.info(this.getClass(), "iteration: "+i+", key: "+rowKey+", exists:"+exists);
-//					log.info(this.getClass(), "took: "+(new Date().getTime()-startingTime)+" ms");
-//					startingTime = new Date().getTime();
-//					sysoutCount = 0;
-//				}
-//				
-//				
-////				log.info(this.getClass(), "putting: "+i+", key: "+rowKey+", exists:"+exists);
-//				try {
-//					Thread.sleep(2);
-//				} catch (InterruptedException e) {
-//			
-//					e.printStackTrace();
-//				}
-//				
-//				if(!exists){
-//					
-//					Put put = generatePut(tableDefinition, rowKey);
-//					log.info(Client.class, "generating Insert: "+put);
-//					baseTable.checkAndPut(Bytes.toBytes(rowKey), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put);
-//					
-//					
-//				}else{
-//					
-//					int zahl = (int)(Math.random() * 2);
-//					switch(zahl){ 
-//						case 0: 
-//							Put update = generatePut(tableDefinition, rowKey);baseTable.put(update);
-//							log.info(Client.class, "generating update: "+update);	
-//						break;
-//						case 1: 
-//							Delete delete = generateDelete(rowKey);baseTable.delete(delete);
-//							log.info(Client.class, "generating delete: "+delete);
-//						break;
-//					}
-//					
-//					
-//				}
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				log.error(this.getClass(), e);
-//			}
-//			
-//
-//
-//		}
+				sysoutCount++;	
+	
+				long k = tableDefinition.getPrimaryKey().getStartRange();
+				
+				if(distribution.equals("uniform"))k+=random.nextInt(new Long(numOfKeys).intValue());
+				if(distribution.equals("zipf"))k+=zipf.next();
+				
+				int digits = String.valueOf(tableDefinition.getPrimaryKey().getEndRange()).length();
+				
+				String rowKey="";
+				
+				if(tableDefinition.getPrimaryKey().getPrefix() != null)rowKey = tableDefinition.getPrimaryKey().getPrefix();
+				
+				for(int x = 0; x < (digits - String.valueOf(k).length());x++)rowKey+="0";
+				rowKey += k;
+				
+				Get get = new Get(Bytes.toBytes(rowKey));
+				boolean exists;
+				try {
+					exists = baseTable.exists(get);
+		
+					
+					
+					if(sysoutCount == SystemConfig.CLIENT_LOGINTERVAL){
+						log.info(this.getClass(), "iteration: "+i+", key: "+rowKey+", exists:"+exists);
+						log.info(this.getClass(), "took: "+(new Date().getTime()-startingTime)+" ms");
+						startingTime = new Date().getTime();
+						sysoutCount = 0;
+					}
+					
+					
+	//				log.info(this.getClass(), "putting: "+i+", key: "+rowKey+", exists:"+exists);
+					try {
+						Thread.sleep(2);
+					} catch (InterruptedException e) {
+				
+						e.printStackTrace();
+					}
+					
+					if(!exists){
+						
+						Put put = generatePut(tableDefinition, rowKey);
+						log.info(Client.class, "generating Insert: "+put);
+						baseTable.checkAndPut(Bytes.toBytes(rowKey), Bytes.toBytes("colfam1"), Bytes.toBytes("aggregationKey"), null, put);
+						
+						
+					}else{
+						
+						int zahl = (int)(Math.random() * 2);
+						switch(zahl){ 
+							case 0: 
+								Put update = generatePut(tableDefinition, rowKey);baseTable.put(update);
+								log.info(Client.class, "generating update: "+update);	
+							break;
+							case 1: 
+								Delete delete = generateDelete(rowKey);baseTable.delete(delete);
+								log.info(Client.class, "generating delete: "+delete);
+							break;
+						}
+						
+						
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					log.error(this.getClass(), e);
+				}
+				
+	
+	
+			}
+		}
 
 		
 		baseTable.close();

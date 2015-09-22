@@ -888,9 +888,6 @@ public class Processing implements Runnable{
 			if(oldVM != null)oldViewRecord = oldVM.getFamilyMap(Bytes.toBytes(colFams.get(0)));
 			
 			CreateAggregationView cAV = CreateAggregationView.parse(btu.getViewDefinition());
-			log.updates(this.getClass(), "oldVM: "+oldVM);
-			log.updates(this.getClass(), "colFams: "+colFams);
-			log.updates(this.getClass(), "oldViewRecord: "+oldViewRecord);
 			
 			String keyName = cAV.getAggregationKey();
 			String valueName = cAV.getAggregationValue();
@@ -1053,7 +1050,6 @@ public class Processing implements Runnable{
 //						log.info(this.getClass(), "Minimum deleted");
 						
 						Map<String, String> res = BytesUtil.convertMapBack(tableService.get(Bytes.toBytes(btu.getViewTable()), Bytes.toBytes(viewRecordKey), BytesUtil.convertList(colFams), new ArrayList<byte[]>(), null).getFamilyMap(Bytes.toBytes(colFams.get(0))));
-						log.updates(this.getClass(), "res: "+res);
 						res.remove(deleteColumn);
 						res.remove(valueName+"_old");
 						res.remove(valueName+"_new");
@@ -1471,8 +1467,6 @@ public class Processing implements Runnable{
 					// combination of composite key + column names from partner + old/new.
 					if (partnerViewRecord != null && !partnerViewRecord.isEmpty()) {
 						for (byte[] bs : partnerViewRecord.keySet()) {
-							log.info(this.getClass(), "kkk: "+ Bytes.toString(bs));
-							log.info(this.getClass(), "kkk: "+ Bytes.toString(partnerViewRecord.get(bs)));
 							String partnerPK = Bytes.toString(bs).split("_")[0];
 							if (!partnerKeys.contains(partnerPK)) {
 								partnerKeys.add(partnerPK);
