@@ -130,21 +130,21 @@ public class TableService{
 //////////////////////////////////////////PUT/////////////////////////////////////////////////	
 	
 
-//	public void put(String tableName, String key, String colFam,  Integer value) throws RemoteException {
-//		
-//		Put put = new Put(Bytes.toBytes(key));
-//		put.add(Bytes.toBytes(colFam), Bytes.toBytes("aggVal"), Bytes.toBytes(value));	
-//		
-//		try {
-//
-//			getTable(tableName).put(put);
-//
-//		} catch (IOException e) {
-//
-//			log.error(this.getClass(), e);
-//		}
-//		
-//	}
+	public void put(String tableName, String key, String colFam, String col, String value) {
+		
+		Put put = new Put(Bytes.toBytes(key));
+		put.add(Bytes.toBytes(colFam), Bytes.toBytes(col), Bytes.toBytes(value));	
+		
+		try {
+
+			getTable(tableName).put(put);
+
+		} catch (IOException e) {
+
+			log.error(this.getClass(), e);
+		}
+		
+	}
 	
 	public void put(byte[] viewTableName, byte[] key, byte[] columnFamily, Put put, byte[] signature) {
 		

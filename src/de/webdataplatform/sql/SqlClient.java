@@ -55,7 +55,7 @@ public class SqlClient {
 				break;
 			// Join
 			case 10:
-				queryString = "SELECT colAggKey1 FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2";
+				queryString = "SELECT * FROM bt1 INNER JOIN bt2 ON bt1.colAggKey1 = bt2.colAggKey2";
 				break;
 			// Join and selection
 			case 11:
