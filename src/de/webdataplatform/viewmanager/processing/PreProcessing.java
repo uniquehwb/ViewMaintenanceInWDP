@@ -117,7 +117,8 @@ public class PreProcessing implements Runnable{
 	
 					
 	//				outgoingQueue.add(baseTableUpdate);
-			
+					
+					// Here the next view is added into update.
 					List<BaseTableUpdate> baseTableViewUpdates =getViews.process(baseTableUpdate);				
 					
 					

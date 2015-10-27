@@ -31,27 +31,27 @@ public class SqlClient {
 				break;
 			// Count aggregation
 			case 4:
-				queryString = "SELECT COUNT (colAggVal1) FROM bt1 GROUP BY colAggKey1";
+				queryString = "SELECT colAggKey1, COUNT (colAggVal1) FROM bt1 GROUP BY colAggKey1";
 				break;
 			// Count aggregation combined with selection
 			case 5:
-				queryString = "SELECT COUNT (colAggVal1) FROM bt1 WHERE colAggVal1 > 10 GROUP BY colAggKey1";
+				queryString = "SELECT colAggKey1, COUNT (colAggVal1) FROM bt1 WHERE colAggVal1 > 10 GROUP BY colAggKey1";
 				break;
 			// Min aggregation
 			case 6:
-				queryString = "SELECT MIN (colAggVal1) FROM bt1 GROUP BY colAggKey1";
+				queryString = "SELECT colAggKey1, MIN (colAggVal1) FROM bt1 GROUP BY colAggKey1";
 				break;
 			// Min aggregation combined with selection
 			case 7:
-				queryString = "SELECT MIN (colAggVal1) FROM bt1 WHERE colAggVal1 < 80 GROUP BY colAggKey1";
+				queryString = "SELECT colAggKey1, MIN (colAggVal1) FROM bt1 WHERE colAggVal1 < 80 GROUP BY colAggKey1";
 				break;
 			// Max aggregation
 			case 8:
-				queryString = "SELECT MAX (colAggVal1) FROM bt1 GROUP BY colAggKey1";
+				queryString = "SELECT colAggKey1, MAX (colAggVal1) FROM bt1 GROUP BY colAggKey1";
 				break;
 			// Max aggregation combined with selection
 			case 9:
-				queryString = "SELECT MAX (colAggVal1) FROM bt1 WHERE colAggVal1 < 80 GROUP BY colAggKey1";
+				queryString = "SELECT colAggKey1, MAX (colAggVal1) FROM bt1 WHERE colAggVal1 < 80 GROUP BY colAggKey1";
 				break;
 			// Join
 			case 10:
