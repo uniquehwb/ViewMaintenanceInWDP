@@ -4,22 +4,23 @@
 	<networkconfig>
 
 		<zookeeper>
-			<quorum>master</quorum>
+			<quorum>vm-10-155-208-78.cloud.mwn.de</quorum>
 			<!-- <clientPort>2222</clientPort> -->
 		</zookeeper>
 
 		<master>
-			<address>master</address>
+			<address>vm-10-155-208-78.cloud.mwn.de</address>
 			<!-- <hbasePort>60100</hbasePort> -->
 			<vmPort>4004</vmPort>
 		</master>
 
-		<hdfs>hdfs://master:9000/hbase</hdfs>
+		<hdfs>hdfs://vm-10-155-208-78.cloud.mwn.de:54310/hbase</hdfs>
 
 		<client>
 			<nodes>
-				<node>master</node>
-				<node>rs1</node>
+				<node>vm-10-155-208-78.cloud.mwn.de</node>
+				<node>vm-10-155-208-79.cloud.mwn.de</node>
+				<!-- <node>vm-10-155-208-80.cloud.mwn.de</node> -->
 			</nodes>
 		</client>
 
@@ -27,8 +28,9 @@
 
 		<regionServer>
 			<nodes>
-				<node>master</node>
-				<node>rs1</node>
+				<node>vm-10-155-208-78.cloud.mwn.de</node>
+				<node>vm-10-155-208-79.cloud.mwn.de</node>
+				<node>vm-10-155-208-80.cloud.mwn.de</node>
 			</nodes>
 			<messagePort>4133</messagePort>
 		</regionServer>
@@ -39,8 +41,9 @@
 			<messagePort>4130</messagePort>
 			<updatePort>4230</updatePort>
 			<nodes>
-				<node>master</node>
-				<node>rs1</node>
+				<node>vm-10-155-208-78.cloud.mwn.de</node>
+				<node>vm-10-155-208-79.cloud.mwn.de</node>
+				<node>vm-10-155-208-80.cloud.mwn.de</node>
 			</nodes>
 		</viewManager>
 

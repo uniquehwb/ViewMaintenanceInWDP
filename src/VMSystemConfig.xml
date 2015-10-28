@@ -5,25 +5,25 @@
 
 
 		<hdfs>
-			<username>hwb</username>
+			<username>jan</username>
 			<password></password>
 		</hdfs>
 
 		<ssh>
-			<user>hwb</user>
-			<password>123321</password>
-			<passwordlessLogin>true</passwordlessLogin>
-			<privateKeyFile>/home/hwb/.ssh/id_dsa</privateKeyFile>
-			<knownHostsFile>/home/hwb/.ssh/known_hosts</knownHostsFile>
-		</ssh>
+     	  <user>jan</user>
+		  <password>MTVdvrDV$15</password>
+		  <passwordlessLogin>false</passwordlessLogin>
+		  <privateKeyFile>/home/master/jan/.ssh/id_rsa</privateKeyFile>
+		  <knownHostsFile>/home/maser/jan/.ssh/known_hosts</knownHostsFile>
+	     </ssh>
 
 		<directories>
-			<hadoop>/home/hwb/Documents/hadoop-1.2.1/</hadoop>
-			<hadoopStorage>/home/hwb/dfsDataDir/</hadoopStorage>
-			<hbase>/home/hwb/Documents/hbase-0.98.12-hadoop1/</hbase>
-			<vmsystem>/home/hwb/Documents/scalablevm/</vmsystem>
-			<zookeeperStorage>/home/hwb/Documents/zookeeper/</zookeeperStorage>
-		</directories>
+	      <hadoop>/home/jan/ViewMaintenance/hadoop-1.2.1/</hadoop>
+		  <hadoopStorage>/usr/local/hadoop/</hadoopStorage>
+	      <hbase>/home/jan/ViewMaintenance/hbase-0.98.12-hadoop1/</hbase>
+	      <vmsystem>/home/jan/scalablevm/</vmsystem>	
+		  <zookeeperStorage>/home/jan/zookeeper/</zookeeperStorage>
+	    </directories>
 
 
 		<master>
