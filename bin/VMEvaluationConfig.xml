@@ -28,10 +28,10 @@
 				<endValue>3</endValue> </variableParam> -->
 		</evaluationParams>
 		<experiment>
-			<numOfRegionServers>2</numOfRegionServers>
-			<numOfViewManagers>2</numOfViewManagers>
+			<numOfRegionServers>3</numOfRegionServers>
+			<numOfViewManagers>3</numOfViewManagers>
 			<numOfKilledViewManagers>0</numOfKilledViewManagers>
-			<numOfClients>1</numOfClients>
+			<numOfClients>2</numOfClients>
 			<createtables>
 				<basetable>
 					<name>bt1</name>

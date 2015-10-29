@@ -39,7 +39,7 @@
 		<viewManager>
 			<numOfInstances>3</numOfInstances>
 			<messagePort>4130</messagePort>
-			<updatePort>4230</updatePort>
+			<updatePort>4230</updatePort> 
 			<nodes>
 				<node>vm-10-155-208-78.cloud.mwn.de</node>
 				<node>vm-10-155-208-79.cloud.mwn.de</node>
