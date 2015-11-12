@@ -20,7 +20,7 @@
 			<nodes>
 				<node>vm-10-155-208-78.cloud.mwn.de</node>
 				<node>vm-10-155-208-79.cloud.mwn.de</node>
-				<!-- <node>vm-10-155-208-80.cloud.mwn.de</node> -->
+				<node>vm-10-155-208-80.cloud.mwn.de</node>
 			</nodes>
 		</client>
 
@@ -31,19 +31,33 @@
 				<node>vm-10-155-208-78.cloud.mwn.de</node>
 				<node>vm-10-155-208-79.cloud.mwn.de</node>
 				<node>vm-10-155-208-80.cloud.mwn.de</node>
+				<node>vm-10-155-208-76.cloud.mwn.de</node>
+				<node>vm-10-155-208-75.cloud.mwn.de</node>
+				<node>vm-10-155-208-60.cloud.mwn.de</node>
+				<node>vm-10-155-208-74.cloud.mwn.de</node>
+				<node>vm-10-155-208-82.cloud.mwn.de</node>
+				<node>vm-10-155-208-83.cloud.mwn.de</node>
+				<node>vm-10-155-208-30.cloud.mwn.de</node>
 			</nodes>
 			<messagePort>4133</messagePort>
 		</regionServer>
 
 
 		<viewManager>
-			<numOfInstances>3</numOfInstances>
+			<numOfInstances>4</numOfInstances>
 			<messagePort>4130</messagePort>
 			<updatePort>4230</updatePort> 
 			<nodes>
 				<node>vm-10-155-208-78.cloud.mwn.de</node>
 				<node>vm-10-155-208-79.cloud.mwn.de</node>
 				<node>vm-10-155-208-80.cloud.mwn.de</node>
+				<node>vm-10-155-208-76.cloud.mwn.de</node>
+				<node>vm-10-155-208-75.cloud.mwn.de</node>
+				<node>vm-10-155-208-60.cloud.mwn.de</node>
+				<node>vm-10-155-208-74.cloud.mwn.de</node>
+				<node>vm-10-155-208-82.cloud.mwn.de</node>
+				<node>vm-10-155-208-83.cloud.mwn.de</node>
+				<node>vm-10-155-208-30.cloud.mwn.de</node>
 			</nodes>
 		</viewManager>
 

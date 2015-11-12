@@ -233,7 +233,7 @@ public class SVMSystem {
 			}
 			
 		}
-		// when did update start?
+		
 		log.info(this.getClass(), "checking if update process is finished....");
 		long lastMeasure = new Date().getTime();
 		long currentTime2;
@@ -251,7 +251,7 @@ public class SVMSystem {
 				log.info(this.getClass(), "update process failed....");
 				break;
 			}
-			
+			// delay time after base table is filled.
 			if(checkProcessFinished((List<CreateBaseTable>)experiment.getCreateBaseTablesAsBaseTables())){
 				log.info(this.getClass(), "view table filled in "+(currentTime2 - lastMeasure)+" ms");
 				log.info(this.getClass(), "update process is finished, cleaning up....");

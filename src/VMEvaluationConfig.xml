@@ -18,7 +18,7 @@
 		<fillTablesTimeout>1800000</fillTablesTimeout>
 		<createControlTables>true</createControlTables>
 		<recreateTables>true</recreateTables>
-		<performanceTest>false</performanceTest>>
+		<performanceTest>true</performanceTest>>
 	</client>
 
 	<evaluationSet>
@@ -28,10 +28,10 @@
 				<endValue>3</endValue> </variableParam> -->
 		</evaluationParams>
 		<experiment>
-			<numOfRegionServers>3</numOfRegionServers>
-			<numOfViewManagers>3</numOfViewManagers>
+			<numOfRegionServers>4</numOfRegionServers>
+			<numOfViewManagers>4</numOfViewManagers>
 			<numOfKilledViewManagers>0</numOfKilledViewManagers>
-			<numOfClients>2</numOfClients>
+			<numOfClients>3</numOfClients>
 			<createtables>
 				<basetable>
 					<name>bt1</name>

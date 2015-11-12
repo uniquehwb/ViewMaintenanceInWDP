@@ -83,7 +83,7 @@ public class DatabaseConfig {
 		    
 		    String keyPrefix = table.getPKPrefix();
 		    String keyStartRange = "1";
-		    String keyEndRange = "1001";
+		    String keyEndRange = "5001";
 		    
 		    KeyDefinition keyDef = new KeyDefinition(keyPrefix, Long.parseLong(keyStartRange), Long.parseLong(keyEndRange));
 		    

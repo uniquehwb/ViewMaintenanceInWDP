@@ -177,7 +177,7 @@ public class EvaluationConfig {
 			    		if ("basetable".equals(table.getType())) {
 			    			String name = table.getName();
 						    String numOfRegions = "2";
-						    String numOfOperations = "101";
+						    String numOfOperations = "50001";
 						    String distribution = "uniform";
 						    String useUpdates = "true";
 						    String useDeletes = "true";
